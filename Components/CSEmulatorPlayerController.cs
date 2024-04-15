@@ -12,26 +12,61 @@ namespace Assets.KaomoLab.CSEmulator.Components
     public class CSEmulatorPlayerController
         : MonoBehaviour
     {
+        const string RIGHT_HAND_UP = "IsRightHandUp";
+        const string LEFT_HAND_UP = "IsLeftHandUp";
+        const string WALKING = "IsWalking";
+        const string DIRECTION_FORWARD = "DirectionForward";
+        const string DIRECTION_RIGHT = "DirectionRight";
+
         public CharacterController characterController { get; private set; } = null;
         public Vector3 velocity { get; private set; } = Vector3.zero;
         public float gravity { get; set; } = Commons.STANDARD_GRAVITY;
-        bool isAdded = false;
+        bool isVelocityAdded = false;
+
+        KeyWalkManager walkManager;
+
+        public HumanPoseManager poseManager { get; private set; } = null; 
+
+        public Animator animator
+        {
+            get
+            {
+                if (_animator == null)
+                    _animator = gameObject
+                        .GetComponentInChildren<VRM.VRMMeta>()
+                        .GetComponentInChildren<Animator>();
+                return _animator;
+            }
+        }
+        Animator _animator = null;
+
 
         IVelocityYHolder cckPlayerVelocityY;
 
         public void Construct(
             CharacterController characterController,
+            RuntimeAnimatorController animatorController,
             IVelocityYHolder cckPlayerVelocityY
         )
         {
             this.characterController = characterController;
             this.cckPlayerVelocityY = cckPlayerVelocityY;
+            this.animator.runtimeAnimatorController = animatorController;
+            this.walkManager = new KeyWalkManager(
+                () => Input.GetKeyDown(KeyCode.W), () => Input.GetKeyUp(KeyCode.W),
+                () => Input.GetKeyDown(KeyCode.S), () => Input.GetKeyUp(KeyCode.S),
+                () => Input.GetKeyDown(KeyCode.D), () => Input.GetKeyUp(KeyCode.D),
+                () => Input.GetKeyDown(KeyCode.A), () => Input.GetKeyUp(KeyCode.A)
+            );
+            this.poseManager = new HumanPoseManager(
+                animator
+            );
         }
 
         public void AddVelocity(Vector3 velocity)
         {
             this.velocity += velocity;
-            isAdded = true;
+            isVelocityAdded = true;
         }
 
         private void LateUpdate()
@@ -43,6 +78,11 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
             ApplyAdditionalGravity();
             ApplyAdditionalVelocity();
+
+            //歩きモーションの後にポーズを上書きするという挙動
+            //つまり歩きモーションがポーズのリセット兼ねている
+            ApplyAnimation();
+            poseManager.Apply();
         }
         void ApplyAdditionalGravity()
         {
@@ -65,14 +105,33 @@ namespace Assets.KaomoLab.CSEmulator.Components
             var k = characterController.isGrounded ? 0.013f : 0.00f;
             velocity -= velocity * k;
 
-            if (!isAdded && characterController.isGrounded)
+            if (!isVelocityAdded && characterController.isGrounded)
             {
                 //着地した時に上方向の速度が残っていると跳ねる。
                 velocity = new Vector3(velocity.x, 0, velocity.z);
             }
-            isAdded = false;
+            isVelocityAdded = false;
 
             characterController.Move(velocity * Time.deltaTime);
+        }
+        void ApplyAnimation()
+        {
+            if (Input.GetKeyDown(KeyCode.C))
+                animator.SetBool(RIGHT_HAND_UP, true);
+            if (Input.GetKeyUp(KeyCode.C))
+                animator.SetBool(RIGHT_HAND_UP, false);
+
+            if (Input.GetKeyDown(KeyCode.Z))
+                animator.SetBool(LEFT_HAND_UP, true);
+            if (Input.GetKeyUp(KeyCode.Z))
+                animator.SetBool(LEFT_HAND_UP, false);
+
+            walkManager.Update(
+                walkSpeed => animator.SetBool(WALKING, walkSpeed > 0),
+                forwardDirection => animator.SetFloat(DIRECTION_FORWARD, forwardDirection),
+                rightDirection => animator.SetFloat(DIRECTION_RIGHT, rightDirection)
+            );
+
         }
     }
 }

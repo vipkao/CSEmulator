@@ -14,7 +14,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public IPlayerController playerController { get; private set; }
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
-        readonly HumanPoseHandler poseHandler;
 
         //csOwnerItemHandlerとはこのハンドルがいるスクリプト空間($)のこと。
         public PlayerHandle(
@@ -24,11 +23,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             this.playerController = playerController;
             this.csOwnerItemHandler = csOwnerItemHandler;
-            poseHandler = new HumanPoseHandler(
-                playerController.animator.avatar,
-                playerController.animator.transform
-            );
-
         }
 
         public void addVelocity(EmulateVector3 velocity)
@@ -114,8 +108,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         //開発用
         public HumanoidPose __getHumanoidPose()
         {
-            var humanPose = new HumanPose();
-            poseHandler.GetHumanPose(ref humanPose);
+            var humanPose = playerController.GetHumanPose();
 
             var muscles = new Muscles();
             for(var i = 0; i < humanPose.muscles.Length; i++)
@@ -139,35 +132,24 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
-            var humanPose = new HumanPose();
+            playerController.SetHumanPosition(
+                pose.centerPosition == null ? null : pose.centerPosition._ToUnityEngine()
+            );
+            playerController.SetHumanRotation(
+                pose.centerRotation == null ? null : pose.centerRotation._ToUnityEngine()
+            );
 
-            if (pose == null || (pose.centerPosition == null && pose.centerRotation == null && pose.muscles == null))
+            if (pose.muscles == null)
             {
-                //ポーズリセット
-                humanPose.bodyPosition = new Vector3(0, 1, 0);
-                humanPose.bodyRotation = new Quaternion(0, 0, 0, 1);
-                humanPose.muscles = Muscles.SPOSE.ToArray();
-                poseHandler.SetHumanPose(ref humanPose);
-                return;
+                playerController.InvalidateHumanMuscles();
             }
-
-            //初期状態ではこの段階でhumanPoseにはT-Poseのmusclesが入っている。
-            //musclesを全て0にすると、手を前に出した中腰ポーズになる。
-            poseHandler.GetHumanPose(ref humanPose);
-
-            //優先順位は動きを付けたら考慮
-            if (pose.muscles != null)
+            else
             {
-                for (var i = 0; i < pose.muscles.changed.Length; i++)
-                {
-                    if (!pose.muscles.changed[i]) continue;
-                    humanPose.muscles[i] = pose.muscles.muscles[i];
-                }
+                playerController.SetHumanMuscles(
+                    pose.muscles.muscles,
+                    pose.muscles.changed
+                );
             }
-            if (pose.centerPosition != null) humanPose.bodyPosition = pose.centerPosition._ToUnityEngine();
-            if (pose.centerRotation != null) humanPose.bodyRotation = pose.centerRotation._ToUnityEngine();
-
-            poseHandler.SetHumanPose(ref humanPose);
         }
 
         public void setJumpSpeedRate(float jumpSpeedRate)

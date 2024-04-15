@@ -25,7 +25,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         //playerのswapn機能を追加して消去機能まで追加したらfalseにするようにする。
         public bool exists => true;
 
-        public Animator animator => csPlayerHandler.animator;
+        public Animator animator => csPlayerController.animator;
 
         public GameObject vrm => csPlayerHandler.vrm;
 
@@ -96,6 +96,31 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public Quaternion GetRotation()
         {
             return playerController.transform.Find("Root").transform.rotation;
+        }
+
+        public void SetHumanPosition(Vector3? position)
+        {
+            csPlayerController.poseManager.SetPosition(position);
+        }
+
+        public void SetHumanRotation(Quaternion? rotation)
+        {
+            csPlayerController.poseManager.SetRotation(rotation);
+        }
+
+        public void SetHumanMuscles(float[] muscles, bool[] hasMascles)
+        {
+            csPlayerController.poseManager.SetMuscles(muscles, hasMascles);
+        }
+
+        public void InvalidateHumanMuscles()
+        {
+            csPlayerController.poseManager.InvalidateMuscles();
+        }
+
+        public HumanPose GetHumanPose()
+        {
+            return csPlayerController.poseManager.GetHumanPose();
         }
     }
 }

@@ -247,7 +247,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             movableItem.AddForce(impulsiveForce._ToUnityEngine(), ForceMode.Impulse);
         }
 
-        public void addImpulsiveForce(EmulateVector3 impulsiveForce, EmulateVector3 position)
+        public void addImpulsiveForceAt(EmulateVector3 impulsiveForce, EmulateVector3 position)
         {
             movableItem.AddForceAtPosition(
                 impulsiveForce._ToUnityEngine(),

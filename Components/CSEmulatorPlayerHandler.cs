@@ -27,15 +27,5 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         public GameObject vrm => gameObject;
 
-        public Animator animator
-        {
-            get
-            {
-                if (_animator == null)
-                    _animator = gameObject.GetComponent<Animator>();
-                return _animator;
-            }
-        }
-        Animator _animator = null;
     }
 }

@@ -62,6 +62,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         UnityEngine.Quaternion GetRotation();
         void SetPosition(UnityEngine.Vector3 position);
         void SetRotation(UnityEngine.Quaternion rotation);
+
+        void SetHumanPosition(UnityEngine.Vector3? position);
+        void SetHumanRotation(UnityEngine.Quaternion? rotation);
+        void SetHumanMuscles(float[] muscles, bool[] hasMascles);
+        void InvalidateHumanMuscles();
+        UnityEngine.HumanPose GetHumanPose();
     }
 
 }

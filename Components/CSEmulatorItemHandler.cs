@@ -28,10 +28,12 @@ namespace Assets.KaomoLab.CSEmulator.Components
         readonly BurstableThrottle itemThrottle = new BurstableThrottle(0.09d, 5);
         readonly BurstableThrottle playerhrottle = new BurstableThrottle(0.09d, 5);
 
-        Dictionary<string, Dictionary<ulong, CSEmulatorItemHandler>> subNodeItemOverlaps = new Dictionary<string, Dictionary<ulong, CSEmulatorItemHandler>>();
-        Dictionary<string, Dictionary<string, CSEmulatorPlayerHandler>> subNodePlayerOverlaps = new Dictionary<string, Dictionary<string, CSEmulatorPlayerHandler>>();
-        Dictionary<ulong, CSEmulatorItemHandler> itemOverlaps = new Dictionary<ulong, CSEmulatorItemHandler>();
-        Dictionary<string, CSEmulatorPlayerHandler> playerOverlaps = new Dictionary<string, CSEmulatorPlayerHandler>();
+        Dictionary<string, Dictionary<int, (CSEmulatorItemHandler, Collider)>> subNodeItemOverlaps = new Dictionary<string, Dictionary<int, (CSEmulatorItemHandler, Collider)>>();
+        Dictionary<string, Dictionary<int, (CSEmulatorPlayerHandler, Collider)>> subNodePlayerOverlaps = new Dictionary<string, Dictionary<int, (CSEmulatorPlayerHandler, Collider)>>();
+        Dictionary<string, Dictionary<int, Collider>> subNodeColliderOverlaps = new Dictionary<string, Dictionary<int, Collider>>();
+        Dictionary<int, (CSEmulatorItemHandler, Collider)> itemOverlaps = new Dictionary<int, (CSEmulatorItemHandler, Collider)>();
+        Dictionary<int, (CSEmulatorPlayerHandler, Collider)> playerOverlaps = new Dictionary<int, (CSEmulatorPlayerHandler, Collider)>();
+        Dictionary<int, Collider> colliderOverlaps = new Dictionary<int, Collider>();
 
         public void Construct(
             bool isCreatedItem
@@ -52,37 +54,49 @@ namespace Assets.KaomoLab.CSEmulator.Components
         public void SetSubNodeOverlap(
             string name,
             CSEmulatorItemHandler itemHandler,
-            CSEmulatorPlayerHandler playerHandler
+            CSEmulatorPlayerHandler playerHandler,
+            Collider collider
         )
         {
             if (!subNodeItemOverlaps.ContainsKey(name))
-                subNodeItemOverlaps[name] = new Dictionary<ulong, CSEmulatorItemHandler>();
+                subNodeItemOverlaps[name] = new Dictionary<int, (CSEmulatorItemHandler, Collider)>();
             if (!subNodePlayerOverlaps.ContainsKey(name))
-                subNodePlayerOverlaps[name] = new Dictionary<string, CSEmulatorPlayerHandler>();
+                subNodePlayerOverlaps[name] = new Dictionary<int, (CSEmulatorPlayerHandler, Collider)>();
+            if (!subNodeColliderOverlaps.ContainsKey(name))
+                subNodeColliderOverlaps[name] = new Dictionary<int, Collider>();
 
             if (itemHandler != null)
-                subNodeItemOverlaps[name][itemHandler.item.Id.Value] = itemHandler;
+                subNodeItemOverlaps[name][collider.GetInstanceID()] = (itemHandler, collider);
 
             if (playerHandler != null)
-                subNodePlayerOverlaps[name][playerHandler.id] = playerHandler;
+                subNodePlayerOverlaps[name][collider.GetInstanceID()] = (playerHandler, collider);
+
+            if (IsOverlapCollider(itemHandler, playerHandler))
+                subNodeColliderOverlaps[name][collider.GetInstanceID()] = collider;
         }
 
         public void RemoveSubNodeOverlap(
             string name,
             CSEmulatorItemHandler itemHandler,
-            CSEmulatorPlayerHandler playerHandler
+            CSEmulatorPlayerHandler playerHandler,
+            Collider collider
         )
         {
             if (!subNodeItemOverlaps.ContainsKey(name))
-                subNodeItemOverlaps[name] = new Dictionary<ulong, CSEmulatorItemHandler>();
+                subNodeItemOverlaps[name] = new Dictionary<int, (CSEmulatorItemHandler, Collider)>();
             if (!subNodePlayerOverlaps.ContainsKey(name))
-                subNodePlayerOverlaps[name] = new Dictionary<string, CSEmulatorPlayerHandler>();
+                subNodePlayerOverlaps[name] = new Dictionary<int, (CSEmulatorPlayerHandler, Collider)>();
+            if (!subNodeColliderOverlaps.ContainsKey(name))
+                subNodeColliderOverlaps[name] = new Dictionary<int, Collider>();
 
             if (itemHandler != null)
-                subNodeItemOverlaps[name].Remove(itemHandler.item.Id.Value);
+                subNodeItemOverlaps[name].Remove(collider.GetInstanceID());
 
             if (playerHandler != null)
-                subNodePlayerOverlaps[name].Remove(playerHandler.id);
+                subNodePlayerOverlaps[name].Remove(collider.GetInstanceID());
+
+            if (collider != null)
+                subNodeColliderOverlaps[name].Remove(collider.GetInstanceID());
         }
 
         public (string, CSEmulatorItemHandler, CSEmulatorPlayerHandler)[] GetOverlaps()
@@ -90,16 +104,21 @@ namespace Assets.KaomoLab.CSEmulator.Components
             var ret = new List<(string, CSEmulatorItemHandler, CSEmulatorPlayerHandler)>();
 
             foreach (var key in itemOverlaps.Keys)
-                ret.Add(("", itemOverlaps[key], null));
+                ret.Add(("", itemOverlaps[key].Item1, null));
             foreach (var key in playerOverlaps.Keys)
-                ret.Add(("", null, playerOverlaps[key]));
+                ret.Add(("", null, playerOverlaps[key].Item1));
+            foreach (var _ in colliderOverlaps.Keys)
+                ret.Add(("", null, null));
 
             foreach (var name in subNodeItemOverlaps.Keys)
                 foreach (var key in subNodeItemOverlaps[name].Keys)
-                    ret.Add((name, subNodeItemOverlaps[name][key], null));
+                    ret.Add((name, subNodeItemOverlaps[name][key].Item1, null));
             foreach (var name in subNodePlayerOverlaps.Keys)
                 foreach (var key in subNodePlayerOverlaps[name].Keys)
-                    ret.Add((name, null, subNodePlayerOverlaps[name][key]));
+                    ret.Add((name, null, subNodePlayerOverlaps[name][key].Item1));
+            foreach (var name in subNodeColliderOverlaps.Keys)
+                foreach (var _ in subNodeColliderOverlaps[name].Keys)
+                    ret.Add((name, null, null));
 
             return ret.ToArray();
         }
@@ -131,15 +150,70 @@ namespace Assets.KaomoLab.CSEmulator.Components
             //ここでUpdateを拾ってはいけない。
         }
 
+        private void LateUpdate()
+        {
+            //これがLateUpdateでいいかはわからない。
+            CheckOverlapsActive();
+        }
+        void CheckOverlapsActive()
+        {
+            //SetActiveでfalseされた場合、OnTriggerExitが動かないので、
+            //リスト中のActiveを確認し必要に応じて削除する。という挙動がある模様。
+            foreach (var key in itemOverlaps.Keys.ToArray())
+            {
+                var g = itemOverlaps[key].Item2.gameObject;
+                if (g != null && g.activeInHierarchy) continue;
+                itemOverlaps.Remove(key);
+            }
+            foreach (var key in playerOverlaps.Keys.ToArray())
+            {
+                //playerもこの判定でいいかはわからないけど、プレビュー上ならどうにでもできる
+                var g = playerOverlaps[key].Item2.gameObject;
+                if (g != null && g.activeInHierarchy) continue;
+                playerOverlaps.Remove(key);
+            }
+            foreach (var key in colliderOverlaps.Keys.ToArray())
+            {
+                var g = colliderOverlaps[key].gameObject;
+                if (g != null && g.activeInHierarchy) continue;
+                colliderOverlaps.Remove(key);
+            }
+
+            foreach (var name in subNodeItemOverlaps.Keys)
+                foreach (var key in subNodeItemOverlaps[name].Keys.ToArray())
+                {
+                    var g = subNodeItemOverlaps[name][key].Item2.gameObject;
+                    if (g != null && g.activeInHierarchy) continue;
+                    subNodeItemOverlaps[name].Remove(key);
+                }
+            foreach (var name in subNodePlayerOverlaps.Keys)
+                foreach (var key in subNodePlayerOverlaps[name].Keys.ToArray())
+                {
+                    //playerもこの判定でいいかはわからないけど、プレビュー上ならどうにでもできる
+                    var g = subNodePlayerOverlaps[name][key].Item2.gameObject;
+                    if (g != null && g.activeInHierarchy) continue;
+                    subNodePlayerOverlaps[name].Remove(key);
+                }
+            foreach (var name in subNodeColliderOverlaps.Keys)
+                foreach (var key in subNodeColliderOverlaps[name].Keys.ToArray())
+                {
+                    var g = subNodeColliderOverlaps[name][key].gameObject;
+                    if (g != null && g.activeInHierarchy) continue;
+                    subNodeColliderOverlaps[name].Remove(key);
+                }
+        }
+
         private void OnTriggerEnter(Collider other)
         {
             if (!IsOverlapTarget(gameObject, other)) return;
             var (itemHandler, playerHandler) = GetHandler(other);
 
             if (itemHandler != null)
-                itemOverlaps[itemHandler.item.Id.Value] = itemHandler;
+                itemOverlaps[other.GetInstanceID()] = (itemHandler, other);
             if (playerHandler != null)
-                playerOverlaps[playerHandler.id] = playerHandler;
+                playerOverlaps[other.GetInstanceID()] = (playerHandler, other);
+            if (IsOverlapCollider(itemHandler, playerHandler))
+                colliderOverlaps[other.GetInstanceID()] = other;
         }
 
         private void OnTriggerStay(Collider other)
@@ -153,9 +227,11 @@ namespace Assets.KaomoLab.CSEmulator.Components
             var (itemHandler, playerHandler) = GetHandler(other);
 
             if (itemHandler != null)
-                itemOverlaps.Remove(itemHandler.item.Id.Value);
+                itemOverlaps.Remove(other.GetInstanceID());
             if (playerHandler != null)
-                playerOverlaps.Remove(playerHandler.id);
+                playerOverlaps.Remove(other.GetInstanceID());
+            if (IsOverlapCollider(itemHandler, playerHandler))
+                colliderOverlaps.Remove(other.GetInstanceID());
         }
 
         private void OnCollisionEnter(Collision collision)
@@ -177,13 +253,19 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         public static bool IsOverlapTarget(GameObject self, Collider collider)
         {
-            //MovableItemならRigidbodyある。
-            //CSETODO このあたりの条件が不安。相手のcolliderはitemのsubnodeもある？
-            if (null == collider.gameObject.GetComponent<CharacterController>()
-                && null == collider.gameObject.GetComponent<Rigidbody>()
+            //まずDetectorは自身に必須
+            if (!self.GetComponent<ClusterVR.CreatorKit.Item.Implements.OverlapDetectorShape>())
+                return false;
+
+            //MovableItemならRigidbodyがある。
+            if (
+                //CharacterControllerが親にいても反応しない。
+                //Rigidbodyが親にいるのには反応する。
+                null == collider.gameObject.GetComponent<CharacterController>()
+                && null == collider.gameObject.GetComponentInParent<Rigidbody>()
                 && null == collider.gameObject.GetComponentInChildren<CSEmulatorPlayerHandler>()
                 && null == self.GetComponent<CharacterController>()
-                && null == self.GetComponent<Rigidbody>()
+                && null == self.GetComponentInParent<Rigidbody>()
                 && null == self.GetComponentInChildren<CSEmulatorPlayerHandler>()
             ) return false;
 
@@ -201,7 +283,13 @@ namespace Assets.KaomoLab.CSEmulator.Components
             var itemHandler = collider.GetComponentInParent<CSEmulatorItemHandler>();
             var playerHandler = collider.GetComponentInChildren<CSEmulatorPlayerHandler>();
 
-            return (itemHandler, playerHandler);
+            return (
+                itemHandler, playerHandler
+            );
+        }
+        public static bool IsOverlapCollider(CSEmulatorItemHandler item, CSEmulatorPlayerHandler handler)
+        {
+            return item == null && handler == null;
         }
 
         public override string ToString()

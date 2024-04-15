@@ -50,22 +50,26 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var cckPlayerGravityHolder = new DesktopPlayerControllerReflector(
                 vrmInstance.GetComponentInParent<ClusterVR.CreatorKit.Preview.PlayerController.DesktopPlayerController>()
             );
+            var animationController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
+                "Assets/KaomoLab/CSEmulator/Components/Animations/Player.controller"
+            );
             csPlayerController.Construct(
                 characterController,
+                animationController,
                 cckPlayerGravityHolder
             );
 
             //ポーズをA-Poseにする。アニメーション来たら多分不要。
-            ResetAPose(csPlayerHandler);
+            ResetAPose(csPlayerController);
 
             return vrmInstance;
         }
 
-        void ResetAPose(Components.CSEmulatorPlayerHandler csPlayerHandler)
+        void ResetAPose(Components.CSEmulatorPlayerController csPlayerController)
         {
             var poseHandler = new HumanPoseHandler(
-                csPlayerHandler.animator.avatar,
-                csPlayerHandler.animator.transform
+                csPlayerController.animator.avatar,
+                csPlayerController.animator.transform
             );
             var humanPose = new HumanPose();
             poseHandler.GetHumanPose(ref humanPose);

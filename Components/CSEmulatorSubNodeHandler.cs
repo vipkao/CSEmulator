@@ -25,7 +25,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             if (!CSEmulatorItemHandler.IsOverlapTarget(gameObject, other)) return;
             var (itemHandler, playerHandler) = CSEmulatorItemHandler.GetHandler(other);
 
-            parent.SetSubNodeOverlap(gameObject.name, itemHandler, playerHandler);
+            parent.SetSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
         }
 
         private void OnTriggerStay(Collider other)
@@ -38,7 +38,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             if (!CSEmulatorItemHandler.IsOverlapTarget(gameObject, other)) return;
             var (itemHandler, playerHandler) = CSEmulatorItemHandler.GetHandler(other);
 
-            parent.RemoveSubNodeOverlap(gameObject.name, itemHandler, playerHandler);
+            parent.RemoveSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
         }
 
         private void OnCollisionEnter(Collision collision)
