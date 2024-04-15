@@ -11,6 +11,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
     public class EmulatorOptions
     {
         public event Handler OnChangedFps = delegate { };
+        public event Handler OnChangedExternalCallLimit = delegate { };
         public event Handler OnChangedPerspective = delegate { };
 
         const string PrefsKeyEnable = "KaomoCSEmulator_enable";
@@ -93,11 +94,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             get => PlayerPrefs.GetString(PrefsKeyCallExternalUrl, "");
             set => PlayerPrefs.SetString(PrefsKeyCallExternalUrl, value);
         }
-        const string PrefsKeyNeedExternalCallThrottling = "KaomoCSEmulator_needExternalCallThrottling";
-        public bool needExternalCallThrottling
+        const string PrefsKeyLimitExternalCall = "KaomoCSEmulator_limitExternalCall";
+        public EmulateClasses.CallExternalRateLimit limitExternalCall
         {
-            get => PlayerPrefs.GetInt(PrefsKeyNeedExternalCallThrottling, 0) == 1;
-            set => PlayerPrefs.SetInt(PrefsKeyNeedExternalCallThrottling, value ? 1 : 0);
+            get => (EmulateClasses.CallExternalRateLimit)PlayerPrefs.GetInt(
+                PrefsKeyLimitExternalCall, (int)EmulateClasses.CallExternalRateLimit.unlimited
+            );
+            set {
+                PlayerPrefs.SetInt(PrefsKeyLimitExternalCall, (int)value);
+                OnChangedExternalCallLimit.Invoke();
+            }
         }
 
         const string PrefsKeyDebug = "KaomoCSEmulator_debug";

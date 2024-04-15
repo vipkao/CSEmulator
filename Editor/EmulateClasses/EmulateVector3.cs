@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class EmulateVector3
+        : ISendableSize
     {
         public float x;
         public float y;
@@ -194,6 +195,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return String.Format("({0:f4},{1:f4},{2:f4})", x, y, z);
         }
 
+        public int GetSize()
+        {
+            return 28;
+        }
 
     }
 }

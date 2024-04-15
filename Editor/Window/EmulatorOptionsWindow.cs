@@ -80,7 +80,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             EditorGUILayout.Separator();
 
             op.callExternalUrl = EditorGUILayout.TextField(new GUIContent("callExternal用URL"), op.callExternalUrl);
-            op.needExternalCallThrottling = EditorGUILayout.Toggle(new GUIContent("　実行回数制限を行う", "連続してテストしたい場合などでOFFにしてください。"), op.needExternalCallThrottling);
+            op.limitExternalCall = (EmulateClasses.CallExternalRateLimit)EditorGUILayout.EnumPopup(new GUIContent("　実行回数制限を行う", "連続してテストしたい場合などでOFFにしてください。"), op.limitExternalCall);
             EditorGUILayout.Separator();
 
             EditorGUILayout.LabelField("以下はプレビュー開始前に設定してください。");

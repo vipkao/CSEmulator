@@ -26,10 +26,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public class ExternalCallerOptions : IExternalCallerOptions
         {
+            public event Handler OnChangeLimit = delegate { };
             readonly EmulatorOptions options;
-            public ExternalCallerOptions(EmulatorOptions options) => this.options = options;
+            public ExternalCallerOptions(EmulatorOptions options)
+            {
+                this.options = options;
+                this.options.OnChangedExternalCallLimit += () => {
+                    OnChangeLimit.Invoke();
+                };
+            }
             public string url => options.callExternalUrl;
-            public bool needThrottling => options.needExternalCallThrottling;
+            public EmulateClasses.CallExternalRateLimit rateLimit => options.limitExternalCall;
         }
 
         public OptionBridge(

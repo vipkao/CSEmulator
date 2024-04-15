@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class ItemHandle
+        : ISendableSize
     {
 
         public string id
@@ -103,12 +104,29 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerSendOperationLimit();
             CheckOwnerDistanceLimit();
+            //CSETODO ワーニング対応がエラー対応になるまでの仮
+            try
+            {
+                CheckRequestSizeLimit(requestName, arg);
+            }catch(Exception ex)
+            {
+                UnityEngine.Debug.LogWarning(ex.Message);
+            }
 
-            //CSETODO Sendableで例えば独自クラスなどを送った場合どうなるかの確認が必要。
             var sanitized = StateProxy.SanitizeSingleValue(arg);
             messageSender.Send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
         }
 
+        void CheckRequestSizeLimit(string requestName, object arg)
+        {
+            var rlen = Encoding.UTF8.GetByteCount(requestName);
+            var alen = StateProxy.CalcSendableSize(arg, 0);
+            if (rlen <= 100 && alen <= 1000) return;
+
+            throw csOwnerItemHandler.itemExceptionFactory.CreateRequestSizeLimitExceeded(
+                String.Format("[{0}][messageType:{1}][arg:{2}]", csItemHandler, rlen, alen)
+            );
+        }
         void CheckOwnerDistanceLimit()
         {
             var p1 = csItemHandler.gameObject.transform.position;
@@ -151,6 +169,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return string.Format("[ItemHandle][{0}][{1}]", csItemHandler == null ? "null" : csItemHandler.gameObjectName, id);
         }
 
+        public int GetSize()
+        {
+            //おそらく固定。アイテム名やGameObject名では差がない。
+            return 13;
+        }
 
     }
 }

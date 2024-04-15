@@ -41,7 +41,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         bool isInFixedUpdate = false;
 
         readonly BurstableThrottle createItemThrottle = new BurstableThrottle(0.09d, 5);
-        readonly BurstableThrottle callExternalThrottle = new BurstableThrottle(12.0d, 5);
+        IChargeThrottle callExternalThrottle = new PassThroughThrottle();
 
         Action<Collision> OnCollideHandler = _ => { };
         Action<bool, bool, PlayerHandle> OnGrabHandler = (_, _, _) => { };
@@ -98,6 +98,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             cckComponentFacade.onInteract += CckComponentFacade_onInteract;
             cckComponentFacade.onUse += CckComponentFacade_onUse;
 
+            this.externalCaller.OnChangeLimit += ApplyCallExternalLimit;
+            ApplyCallExternalLimit();
         }
 
         ClusterVR.CreatorKit.Item.ItemId itemId
@@ -247,6 +249,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             externalCaller.CallExternal(request, meta);
         }
+        void ApplyCallExternalLimit()
+        {
+            callExternalThrottle = this.externalCaller.rateLimit switch
+            {
+                CallExternalRateLimit.unlimited => new PassThroughThrottle(),
+                CallExternalRateLimit.limit5 => new BurstableThrottle(12.0d, 5),
+                CallExternalRateLimit.limit100 => new BurstableThrottle(60d / 100d, 5),
+                _ => throw new NotImplementedException()
+            };
+        }
         void CheckCallExternalSizeLimit(string request, string meta)
         {
             if (Encoding.UTF8.GetByteCount(request) > 1000)
@@ -264,14 +276,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         }
         void CheckCallExternalOperationLimit()
         {
-            if (!externalCaller.needThrottling) return;
-
             var result = callExternalThrottle.TryCharge();
             if (result) return;
 
             throw itemExceptionFactory.CreateRateLimitExceeded(
                 String.Format("[{0}]", gameObject.name)
             );
+        }
+
+        public int computeSendableSize(object obj)
+        {
+            var size = StateProxy.CalcSendableSize(obj, 0);
+            return size;
         }
 
         public ItemHandle createItem(

@@ -2,7 +2,8 @@
     "name": "KaomoLab.CSEmulator.Editor.Window",
     "rootNamespace": "",
     "references": [
-        "KaomoLab.CSEmulator.Editor.Preview"
+        "KaomoLab.CSEmulator.Editor.Preview",
+        "KaomoLab.CSEmulator.Editor.EmulateClasses"
     ],
     "includePlatforms": [
         "Editor"

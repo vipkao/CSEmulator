@@ -10,6 +10,7 @@ namespace Assets.KaomoLab.CSEmulator
     /// 瞬間的な流入回数を許容する流入量制限機能
     /// </summary>
     public class BurstableThrottle
+        : IChargeThrottle
     {
         public int burstLimit { get; private set; }
 

@@ -152,15 +152,27 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public void SetState(string target, string key, object value);
         public object GetState(string target, string key, string parameterType);
     }
+    public enum CallExternalRateLimit : int
+    {
+        unlimited,
+        limit5,
+        limit100
+    }
     public interface IExternalCaller
     {
-        bool needThrottling { get; }
+        event Handler OnChangeLimit;
+        CallExternalRateLimit rateLimit { get; }
         void CallExternal(string request, string meta);
         void SetCallEndCallback(Action<string, string, string> Callback);
     }
     public interface ICckComponentFacadeFactory
     {
         ICckComponentFacade Create(UnityEngine.GameObject gameObject);
+    }
+
+    public interface ISendableSize
+    {
+        int GetSize();
     }
 
 }

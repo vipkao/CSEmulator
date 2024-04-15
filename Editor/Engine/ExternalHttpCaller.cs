@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.KaomoLab.CSEmulator.Editor.EmulateClasses;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -11,12 +12,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     public class ExternalHttpCaller
         : EmulateClasses.IExternalCaller
     {
+        public event Handler OnChangeLimit = delegate { };
+
         readonly IExternalCallerOptions options;
         readonly ILogger logger;
 
         Action<string, string, string> Callback = (_, _, _) => { };
 
-        public bool needThrottling => options.needThrottling;
+        public CallExternalRateLimit rateLimit => options.rateLimit;
 
         [System.Serializable]
         public class Request
@@ -38,6 +41,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         {
             this.options = options;
             this.logger = logger;
+            this.options.OnChangeLimit += () =>
+            {
+                OnChangeLimit.Invoke();
+            };
         }
 
         public async void CallExternal(string request, string meta)

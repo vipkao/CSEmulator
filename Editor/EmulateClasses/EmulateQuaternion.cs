@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class EmulateQuaternion
+        : ISendableSize
     {
         public float x;
         public float y;
@@ -152,5 +153,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return String.Format("({0:f4},{1:f4},{2:f4},{3:f4})", x, y, z, w);
         }
 
+        public int GetSize()
+        {
+            return 36;
+        }
     }
 }

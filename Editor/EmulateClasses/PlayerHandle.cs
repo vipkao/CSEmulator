@@ -8,6 +8,7 @@ using UnityEngine;
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class PlayerHandle
+        : ISendableSize
     {
         readonly IPlayerMeta playerMeta;
         readonly IPlayerController playerController;
@@ -279,6 +280,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             var vrm = playerController.vrm;
             return string.Format("[PlayerHandle][{0}][{1}]", vrm == null ? null : vrm.name, id);
+        }
+
+        public int GetSize()
+        {
+            //2キャラで確認おそらく固定
+            return 40;
         }
     }
 }

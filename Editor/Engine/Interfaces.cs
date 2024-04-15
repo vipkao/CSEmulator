@@ -19,7 +19,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
     public interface IExternalCallerOptions
     {
+        event Handler OnChangeLimit;
         string url { get; }
-        bool needThrottling { get; }
+        EmulateClasses.CallExternalRateLimit rateLimit { get; }
     }
 }

@@ -38,4 +38,9 @@ namespace Assets.KaomoLab.CSEmulator
     {
         long Ticks();
     }
+    public interface IChargeThrottle
+    {
+        bool TryCharge();
+        void Discharge(double amount);
+    }
 }
