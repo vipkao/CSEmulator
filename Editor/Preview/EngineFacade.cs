@@ -13,7 +13,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         readonly ItemCollector itemCollector;
         readonly VrmPreparer vrmPreparer;
-        readonly NearDetectorPreparer nearDetectorPreparer;
 
         readonly PrefabItemStore prefabItemStore;
         readonly ItemMessageRouter itemMessageRouter;
@@ -32,7 +31,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             EmulatorOptions options,
             ItemCollector itemCollector,
             VrmPreparer vrmPreparer,
-            NearDetectorPreparer nearDetectorPreparer,
             ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer,
             ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager,
             ILogger logger
@@ -41,7 +39,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             this.options = options;
             this.itemCollector = itemCollector;
             this.vrmPreparer = vrmPreparer;
-            this.nearDetectorPreparer = nearDetectorPreparer;
             this.logger = logger;
 
             prefabItemStore = new PrefabItemStore(
@@ -60,8 +57,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             itemCollector.OnItemCreated += i =>
             {
                 var csItemHandler = CSEmulator.Commons.AddComponent<Components.CSEmulatorItemHandler>(i.gameObject);
-                var nearDetectorHandler = nearDetectorPreparer.InstantiateHandler(i.gameObject);
-                csItemHandler.Construct(nearDetectorHandler, true);
+                csItemHandler.Construct(true);
             };
             itemDestroyer.OnDestroy += i =>
             {
@@ -80,8 +76,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             foreach(var i in itemCollector.GetAllItems())
             {
                 var csItemHandler = CSEmulator.Commons.AddComponent<Components.CSEmulatorItemHandler>(i.gameObject);
-                var nearDetectorHandler = nearDetectorPreparer.InstantiateHandler(i.gameObject);
-                csItemHandler.Construct(nearDetectorHandler, false);
+                csItemHandler.Construct(false);
             }
 
             //このタイミングでよさそう
@@ -102,13 +97,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         )
         {
             var itemHandler = scriptableItem.Item.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
+            var loggerFactory = new DebugLogFactory(itemHandler.gameObject, options);
+            var runnerOptions = new OptionBridge(options);
             var ret = new CodeRunner(
                 scriptableItem,
                 itemHandler,
                 prefabItemStore,
                 itemMessageRouter,
                 playerHandleStore,
-                playerControllerBridgeFactory
+                playerControllerBridgeFactory,
+                runnerOptions,
+                loggerFactory
             );
             ret.Start();
             return ret;

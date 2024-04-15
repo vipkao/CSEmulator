@@ -38,12 +38,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             set => ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController).SetMoveSpeedRate(value);
         }
 
-        public float gravity { get; set; } = CSEmulator.Commons.STANDARD_GRAVITY;
+        public float gravity
+        {
+            get => csPlayerController.gravity;
+            set => csPlayerController.gravity = value;
+        }
 
         public PermissionType permissionType = PermissionType.Audience;
-
-        FieldInfo velocityY_controller;
-        MethodInfo SetRotation_controller;
 
         public CCKPlayerControllerBridge(
             Components.CSEmulatorPlayerHandler csPlayerHandler,
@@ -56,24 +57,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.csPlayerController = csPlayerController;
             this.playerController = playerController;
             this.spawnPointManager = spawnPointManager;
-
-            csPlayerHandler.OnUpdate += CsPlayerHandler_OnUpdate;
-
-            velocityY_controller = typeof(DesktopPlayerController)
-                .GetField("velocityY", BindingFlags.NonPublic | BindingFlags.Instance);
-            SetRotation_controller = typeof(DesktopPlayerController)
-                .GetMethod("SetRotation", BindingFlags.NonPublic | BindingFlags.Instance);
-        }
-
-        private void CsPlayerHandler_OnUpdate()
-        {
-            if (gravity != CSEmulator.Commons.STANDARD_GRAVITY)
-            {
-                //DesktopPlayerControllerの重力加速度が決め打ちなので
-                var delta = Time.deltaTime * (gravity - CSEmulator.Commons.STANDARD_GRAVITY);
-                var v = (float)velocityY_controller.GetValue(playerController);
-                velocityY_controller.SetValue(playerController, v + delta);
-            }
         }
 
         public void Respawn()
@@ -90,27 +73,27 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 .ResetCameraRotation(yawOnlyRotation);
         }
 
-        public void addVelocity(Vector3 velocity)
+        public void AddVelocity(Vector3 velocity)
         {
             csPlayerController.AddVelocity(velocity);
         }
 
-        public void setPosition(Vector3 position)
+        public void SetPosition(Vector3 position)
         {
             playerController.WarpTo(position);
         }
 
-        public void setRotation(Quaternion rotation)
+        public void SetRotation(Quaternion rotation)
         {
             ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController)
                 .SetRotationKeepingHeadPitch(rotation);
         }
 
-        public Vector3 getPosition()
+        public Vector3 GetPosition()
         {
             return playerController.transform.position;
         }
-        public Quaternion getRotation()
+        public Quaternion GetRotation()
         {
             return playerController.transform.Find("Root").transform.rotation;
         }

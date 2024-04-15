@@ -50,7 +50,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForce(EmulateVector3 force)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             //AddInstantForceItemGimmickを参考にしている。
             if (movableItem == null)
@@ -66,7 +67,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForceAt(EmulateVector3 impluse, EmulateVector3 position)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             fixedUpdateQueue.Add(() =>
             {
@@ -80,7 +82,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveTorque(EmulateVector3 torque)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             fixedUpdateQueue.Add(() =>
             {
@@ -96,11 +99,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void send(string requestName, object arg)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             //CSETODO Sendableで例えば独自クラスなどを送った場合どうなるかの確認が必要。
             var sanitized = StateProxy.SanitizeSingleValue(arg);
-            messageSender.send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
+            messageSender.Send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
         }
 
         public override string ToString()
@@ -108,7 +112,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return string.Format("[ItemHandle][{0}][{1}]", csItemHandler.item.gameObject.name, id);
         }
 
-        void CheckOwnerDistance()
+        void CheckOwnerDistanceLimit()
         {
             var p1 = csItemHandler.gameObject.transform.position;
             var p2 = csOwnerItemHandler.gameObject.transform.position;
@@ -118,6 +122,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)) { distanceLimitExceeded = true };
         }
+        void CheckOwnerOperationLimit()
+        {
+            var result = csOwnerItemHandler.TryItemOperate();
+            if (result) return;
 
+            throw new ClusterScriptError(String.Format("rateLimitExceeded[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)) { rateLimitExceeded = true };
+        }
     }
 }

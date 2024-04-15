@@ -62,6 +62,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
                     "VRMのPrefabを指定してください。", MessageType.Error
                 );
             }
+            op.debug = EditorGUILayout.Toggle("デバッグモードで実行する。", op.debug);
+            EditorGUILayout.LabelField("　動作が遅くなりますが、ログ出力が詳細になります。");
         }
 
         void CheckUniVrmVersion()

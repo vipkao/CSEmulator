@@ -19,6 +19,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly ItemMessageRouter itemMessageRouter;
         readonly PlayerHandlerStore playerHandleStore;
         readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
+        readonly IRunnerOptions options;
+        readonly ILoggerFactory loggerFactory;
 
         Jint.Engine engine;
 
@@ -28,7 +30,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             PrefabItemStore prefabItemStore,
             ItemMessageRouter itemMessageRouter,
             PlayerHandlerStore playerHandleStore,
-            PlayerControllerBridgeFactory playerControllerBridgeFactory
+            PlayerControllerBridgeFactory playerControllerBridgeFactory,
+            IRunnerOptions options,
+            ILoggerFactory loggerFactory
         )
         {
             this.gameObject = scriptableItem.Item.gameObject;
@@ -37,6 +41,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.itemMessageRouter = itemMessageRouter;
             this.playerHandleStore = playerHandleStore;
             this.playerControllerBridgeFactory = playerControllerBridgeFactory;
+            this.options = options;
+            this.loggerFactory = loggerFactory;
 
             code = scriptableItem.GetSourceCode(true);
 
@@ -55,6 +61,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         public void Start()
         {
             csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
+            onUpdateBridge.SetLateUpdateCallback(
+                csItemHandler.gameObject.name + "_throttle",
+                csItemHandler.gameObject.name + "_throttle",
+                CsItemHandler_ThrottleUpdate
+            );
+
+            var engineOptions = new Jint.Options();
+            if(options.isDebug)
+                engineOptions.Debugger.Enabled = true;
+            engine = new Jint.Engine(engineOptions);
+
+            var logger = loggerFactory.Create(new JintProgramStatus(engine));
 
             var clusterScript = emulateClassFactory.CreateDefaultClusterScript(
                 gameObject,
@@ -65,10 +83,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 prefabItemStore,
                 playerHandleStore,
                 playerControllerBridgeFactory,
-                stateProxy
+                stateProxy,
+                logger
             );
 
-            engine = new Jint.Engine();
             engine.SetValue("$", clusterScript);
             SetClass<EmulateClasses.EmulateVector2>(engine, "Vector2");
             SetClass<EmulateClasses.EmulateVector3>(engine, "Vector3");
@@ -90,6 +108,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         private void CsItemHandler_OnFixedUpdate()
         {
             onFixedUpdateBridge.InvokeUpdate();
+        }
+        private void CsItemHandler_ThrottleUpdate(double dt)
+        {
+            csItemHandler.DischargeOperateLimit(dt);
         }
 
         void SetClass<T>(Jint.Engine engine, string name)
@@ -123,6 +145,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         public void Shutdown()
         {
             csItemHandler.OnFixedUpdate -= CsItemHandler_OnFixedUpdate;
+            onUpdateBridge.DeleteLateUpdateCallback(
+                csItemHandler.gameObject.name + "_throttle"
+            );
             engine.Dispose();
         }
     }

@@ -25,7 +25,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IPrefabItemHolder prefabItemHolder;
         readonly IPlayerHandleHolder playerHandleHolder;
         readonly IPlayerControllerFactory playerControllerFactory;
+        readonly IProgramStatus programStatus;
         readonly StateProxy stateProxy;
+        readonly ILogger logger;
 
         readonly ClusterVR.CreatorKit.Item.Implements.MovableItem movableItem;
         readonly ClusterVR.CreatorKit.Item.IItem item;
@@ -62,7 +64,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
-            StateProxy stateProxy
+            StateProxy stateProxy,
+            ILogger logger
         )
         {
             this.gameObject = gameObject;
@@ -82,6 +85,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.playerHandleHolder = playerHandleHolder;
             this.playerControllerFactory = playerControllerFactory;
             this.stateProxy = stateProxy;
+            this.logger = logger;
 
             item = this.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IItem>();
             csItemHandler = this.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
@@ -421,19 +425,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (v == null)
             {
-                UnityEngine.Debug.Log("");
+                logger.Info("");
             }
             else if (v is System.Object[] oa)
             {
-                UnityEngine.Debug.Log(CSEmulator.Commons.ObjectArrayToString(oa));
+                logger.Info(CSEmulator.Commons.ObjectArrayToString(oa));
             }
             else if (v is System.Dynamic.ExpandoObject eo)
             {
-                UnityEngine.Debug.Log(CSEmulator.Commons.ExpandoObjectToString(eo, openb: "{", closeb: "}", indent: "", separator: ","));
+                logger.Info(CSEmulator.Commons.ExpandoObjectToString(eo, openb: "{", closeb: "}", indent: "", separator: ","));
             }
             else
             {
-                UnityEngine.Debug.Log(v.ToString());
+                logger.Info(v.ToString());
             }
         }
 
@@ -472,7 +476,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!hasGrabbableItem)
             {
-                Debug.LogWarning(String.Format("[{0}]onGrab() need [Grabbable Item] component.", this.gameObject.name));
+                logger.Warning(String.Format("[{0}]onGrab() need [Grabbable Item] component.", this.gameObject.name));
             }
             OnGrabHandler = Callback;
         }
@@ -516,7 +520,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!hasCollider)
             {
-                Debug.LogWarning(String.Format("[{0}]onInteract() need [Collider] component.", this.gameObject.name));
+                logger.Warning(String.Format("[{0}]onInteract() need [Collider] component.", this.gameObject.name));
                 return;
             }
 
@@ -560,7 +564,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!hasRidableItem)
             {
-                Debug.LogWarning(String.Format("[{0}]onRide() need [Ridable Item] component.", this.gameObject.name));
+                logger.Warning(String.Format("[{0}]onRide() need [Ridable Item] component.", this.gameObject.name));
             }
             OnRideHandler = Callback;
         }
@@ -734,7 +738,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!hasMovableItem && !hasCharacterItem)
             {
-                Debug.LogWarning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
+                logger.Warning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
                 return;
             }
             //movableItem.SetPositionAndRotation(
@@ -747,7 +751,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!hasMovableItem && !hasCharacterItem)
             {
-                Debug.LogWarning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
+                logger.Warning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
                 return;
             }
             //movableItem.SetPositionAndRotation(
@@ -808,7 +812,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             var child = FindChild(gameObject.transform, subNodeName);
             if (child == null)
-                Debug.LogWarning(String.Format("subNode:[{0}] is null.", subNodeName));
+                logger.Warning(String.Format("subNode:[{0}] is null.", subNodeName));
             var ret = new SubNode(child, item, updateListenerBinder);
             return ret;
         }

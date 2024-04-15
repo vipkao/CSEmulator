@@ -40,7 +40,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         {
         }
 
-        public void send(
+        public void Send(
             ulong id,
             string requestName,
             object arg,

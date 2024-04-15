@@ -12,6 +12,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         long prevTicks;
 
         Dictionary<string, (Action<double>, string)> UpdateCallbacks = new Dictionary<string, (Action<double>, string)>();
+        Dictionary<string, (Action<double>, string)> LateUpdateCallbacks = new Dictionary<string, (Action<double>, string)>();
 
 
         public Action InvokeUpdate { get; private set; }
@@ -38,6 +39,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                             Commons.ExceptionLogger(e, source);
                         }
                     }
+                    foreach (var (Callback, source) in LateUpdateCallbacks.Values.ToArray())
+                    {
+                        try
+                        {
+                            Callback(deltaTime);
+                        }
+                        catch (Exception e)
+                        {
+                            Commons.ExceptionLogger(e, source);
+                        }
+                    }
                     prevTicks = nowTicks;
                 };
             };
@@ -54,9 +66,21 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             UpdateCallbacks.Remove(key);
         }
 
+        public void SetLateUpdateCallback(string key, string source, Action<double> Callback)
+        {
+            LateUpdateCallbacks[key] = (Callback, source);
+        }
+
+        public void DeleteLateUpdateCallback(string key)
+        {
+            if (!LateUpdateCallbacks.ContainsKey(key)) return;
+            LateUpdateCallbacks.Remove(key);
+        }
+
         public void Dispose()
         {
             UpdateCallbacks.Clear();
+            LateUpdateCallbacks.Clear();
         }
     }
 }

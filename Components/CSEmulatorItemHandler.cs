@@ -22,7 +22,11 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         public bool isCreatedItem { get; private set; } = false;
 
-        public CSEmulatorNearDetectorHandler nearDetectorHandler { get; private set; }
+        //検証の結果…
+        //・制限はitemとplayerで分かれている模様。
+        //・ロジックやパラメータもおおよそこんな感じ。
+        readonly BurstableThrottle itemThrottle = new BurstableThrottle(0.09d, 5);
+        readonly BurstableThrottle playerhrottle = new BurstableThrottle(0.09d, 5);
 
         Dictionary<string, Dictionary<ulong, CSEmulatorItemHandler>> subNodeItemOverlaps = new Dictionary<string, Dictionary<ulong, CSEmulatorItemHandler>>();
         Dictionary<string, Dictionary<string, CSEmulatorPlayerHandler>> subNodePlayerOverlaps = new Dictionary<string, Dictionary<string, CSEmulatorPlayerHandler>>();
@@ -30,17 +34,9 @@ namespace Assets.KaomoLab.CSEmulator.Components
         Dictionary<string, CSEmulatorPlayerHandler> playerOverlaps = new Dictionary<string, CSEmulatorPlayerHandler>();
 
         public void Construct(
-            CSEmulatorNearDetectorHandler nearDetectorHandler
-        )
-        {
-            Construct(nearDetectorHandler, false);
-        }
-        public void Construct(
-            CSEmulatorNearDetectorHandler nearDetectorHandler,
             bool isCreatedItem
         )
         {
-            this.nearDetectorHandler = nearDetectorHandler;
             this.isCreatedItem = isCreatedItem;
 
             var detectors = gameObject.GetComponentsInChildren<ClusterVR.CreatorKit.Item.Implements.OverlapDetectorShape>()
@@ -106,6 +102,21 @@ namespace Assets.KaomoLab.CSEmulator.Components
                     ret.Add((name, null, subNodePlayerOverlaps[name][key]));
 
             return ret.ToArray();
+        }
+
+        public bool TryItemOperate()
+        {
+            return itemThrottle.TryCharge();
+        }
+        public bool TryPlayerOperate()
+        {
+            return playerhrottle.TryCharge();
+        }
+
+        public void DischargeOperateLimit(double time)
+        {
+            itemThrottle.Discharge(time);
+            playerhrottle.Discharge(time);
         }
 
         void FixedUpdate()

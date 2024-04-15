@@ -23,7 +23,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
-            StateProxy stateProxy
+            StateProxy stateProxy,
+            ILogger logger
         )
         {
             return new ClusterScript(
@@ -40,7 +41,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 prefabItemHolder,
                 playerHandleHolder,
                 playerControllerFactory,
-                stateProxy
+                stateProxy,
+                logger
             );
         }
 

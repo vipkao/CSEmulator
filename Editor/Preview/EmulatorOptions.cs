@@ -52,6 +52,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             }
         }
 
+        const string PrefsKeyDebug = "KaomoCSEmulator_debug";
+        public bool debug
+        {
+            get => PlayerPrefs.GetInt(PrefsKeyDebug, 0) == 1;
+            set => PlayerPrefs.SetInt(PrefsKeyDebug, value ? 1 : 0);
+        }
+
+
 
         public EmulatorOptions()
         {

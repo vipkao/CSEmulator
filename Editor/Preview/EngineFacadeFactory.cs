@@ -27,7 +27,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 new Engine.VrmPreparer(
                     options.vrm
                 ),
-                new Engine.NearDetectorPreparer(),
                 new Implements.UnityDebugLog()
             );
         }
@@ -36,7 +35,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         public EngineFacade Create(
             Engine.ItemCollector itemCollector,
             Engine.VrmPreparer vrmPreparer,
-            Engine.NearDetectorPreparer nearDetectorPreparer,
             ILogger logger
         )
         {
@@ -44,7 +42,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 options,
                 itemCollector,
                 vrmPreparer,
-                nearDetectorPreparer,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SpawnPointManager,
                 logger

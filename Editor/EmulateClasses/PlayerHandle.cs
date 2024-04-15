@@ -33,9 +33,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addVelocity(EmulateVector3 velocity)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            playerController.addVelocity(velocity._ToUnityEngine());
+            playerController.AddVelocity(velocity._ToUnityEngine());
         }
 
         public bool exists()
@@ -47,7 +48,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            CheckOwnerDistance();
+            CheckOwnerDistanceLimit();
 
             var v = playerController.animator.GetBoneTransform((HumanBodyBones)bone);
             return new EmulateVector3(v.position);
@@ -57,7 +58,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            CheckOwnerDistance();
+            CheckOwnerDistanceLimit();
 
             var v = playerController.animator.GetBoneTransform((HumanBodyBones)bone);
             return new EmulateQuaternion(v.rotation);
@@ -67,9 +68,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            CheckOwnerDistance();
+            CheckOwnerDistanceLimit();
 
-            var v = playerController.getPosition();
+            var v = playerController.GetPosition();
             return new EmulateVector3(v);
         }
 
@@ -77,17 +78,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            CheckOwnerDistance();
+            CheckOwnerDistanceLimit();
 
-            var q = playerController.getRotation();
+            var q = playerController.GetRotation();
             return new EmulateQuaternion(q);
         }
 
         public void resetPlayerEffects()
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            //CSETODO 実行数チェックどうする？
             playerController.moveSpeedRate = 1;
             playerController.jumpSpeedRate = 1;
             playerController.gravity = CSEmulator.Commons.STANDARD_GRAVITY;
@@ -95,18 +96,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void respawn()
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            //CSETODO 実行数チェックどうする？
             playerController.Respawn();
         }
 
 
         public void setGravity(float gravity)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            //CSETODO 実行数チェックどうする？
             playerController.gravity = gravity;
         }
 
@@ -135,9 +136,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             HumanoidPose pose
         )
         {
-            CheckOwnerDistance();
-
-            //CSETODO 実行数チェックどうする？
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             var humanPose = new HumanPose();
 
@@ -172,17 +172,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setJumpSpeedRate(float jumpSpeedRate)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            //CSETODO 実行数チェックどうする？
             playerController.jumpSpeedRate = jumpSpeedRate;
         }
 
         public void setMoveSpeedRate(float moveSpeedRate)
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            //CSETODO 実行数チェックどうする？
             playerController.moveSpeedRate = moveSpeedRate;
         }
 
@@ -190,21 +190,23 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateVector3 position
         )
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
-            playerController.setPosition(position._ToUnityEngine());
+            playerController.SetPosition(position._ToUnityEngine());
         }
 
         public void setRotation(
             EmulateQuaternion rotation
         )
         {
-            CheckOwnerDistance();
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
 
             //Ｙ軸回転(鉛直軸)のみ
             var r = rotation._ToUnityEngine().eulerAngles;
             var y = Quaternion.Euler(0, r.y, 0);
-            playerController.setRotation(y);
+            playerController.SetRotation(y);
         }
 
         public override string ToString()
@@ -212,15 +214,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return string.Format("[PlayerHandle][{0}][{1}]", playerController.vrm.name, id);
         }
 
-        void CheckOwnerDistance()
+        void CheckOwnerDistanceLimit()
         {
-            var p1 = playerController.getPosition();
+            var p1 = playerController.GetPosition();
             var p2 = csOwnerItemHandler.gameObject.transform.position;
             var d = UnityEngine.Vector3.Distance(p1, p2);
             //30メートル以内はOK
             if (d <= 30f) return;
 
             throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[Player]", csOwnerItemHandler)) { distanceLimitExceeded = true };
+        }
+        void CheckOwnerOperationLimit()
+        {
+            var result = csOwnerItemHandler.TryPlayerOperate();
+            if (result) return;
+
+            throw new ClusterScriptError(String.Format("rateLimitExceeded[{0}]>>>[Player]", csOwnerItemHandler)) { rateLimitExceeded = true };
         }
     }
 }

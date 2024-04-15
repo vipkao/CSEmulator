@@ -10,6 +10,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     {
         void SetUpdateCallback(string key, string source, Action<double> Callback);
         void DeleteUpdateCallback(string key);
+        void SetLateUpdateCallback(string key, string source, Action<double> Callback);
+        void DeleteLateUpdateCallback(string key);
     }
 
     public interface IReceiveListenerBinder
@@ -19,7 +21,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
     public interface IMessageSender
     {
-        void send(ulong id, string requestName, object arg, Components.CSEmulatorItemHandler sender);
+        void Send(ulong id, string requestName, object arg, Components.CSEmulatorItemHandler sender);
     }
 
     public interface IPrefabItemHolder
@@ -54,12 +56,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         void Respawn();
 
-        void addVelocity(UnityEngine.Vector3 velocity);
+        void AddVelocity(UnityEngine.Vector3 velocity);
 
-        UnityEngine.Vector3 getPosition();
-        UnityEngine.Quaternion getRotation();
-        void setPosition(UnityEngine.Vector3 position);
-        void setRotation(UnityEngine.Quaternion rotation);
+        UnityEngine.Vector3 GetPosition();
+        UnityEngine.Quaternion GetRotation();
+        void SetPosition(UnityEngine.Vector3 position);
+        void SetRotation(UnityEngine.Quaternion rotation);
     }
 
 }

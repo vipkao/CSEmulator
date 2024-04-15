@@ -37,13 +37,5 @@ namespace Assets.KaomoLab.CSEmulator.Components
             }
         }
         Animator _animator = null;
-
-        public event Handler OnUpdate = delegate { };
-
-        private void Update()
-        {
-            OnUpdate.Invoke();
-        }
-
     }
 }

@@ -30,6 +30,22 @@ namespace Assets.KaomoLab.CSEmulator
             return mask;
         }
 
+        public static string GetFullPath(this UnityEngine.GameObject gameObject)
+        {
+            return GetFullPath(gameObject.transform);
+        }
+        static string GetFullPath(UnityEngine.Transform transform)
+        {
+            string path = transform.name;
+            var parent = transform.parent;
+            while (parent)
+            {
+                path = $"{parent.name}/{path}";
+                parent = parent.parent;
+            }
+            return path;
+        }
+
         public static T AddComponent<T>(UnityEngine.GameObject gameObject)
             where T : UnityEngine.MonoBehaviour
         {
