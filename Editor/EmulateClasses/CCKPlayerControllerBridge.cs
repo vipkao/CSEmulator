@@ -14,6 +14,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         : IPlayerController
     {
         readonly Components.CSEmulatorPlayerHandler csPlayerHandler;
+        readonly Components.CSEmulatorPlayerController csPlayerController;
         readonly DesktopPlayerController playerController;
         readonly SpawnPointManager spawnPointManager;
 
@@ -58,11 +59,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public CCKPlayerControllerBridge(
             Components.CSEmulatorPlayerHandler csPlayerHandler,
+            Components.CSEmulatorPlayerController csPlayerController,
             DesktopPlayerController playerController,
             SpawnPointManager spawnPointManager
         )
         {
             this.csPlayerHandler = csPlayerHandler;
+            this.csPlayerController = csPlayerController;
             this.playerController = playerController;
             this.spawnPointManager = spawnPointManager;
 
@@ -97,6 +100,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 .SetRotationKeepingHeadPitch(yawOnlyRotation);
             ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController)
                 .ResetCameraRotation(yawOnlyRotation);
+        }
+
+        public void addVelocity(Vector3 velocity)
+        {
+            csPlayerController.AddVelocity(velocity);
         }
 
         public void setPosition(Vector3 position)

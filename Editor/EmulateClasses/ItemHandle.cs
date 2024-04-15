@@ -14,7 +14,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             get => csItemHandler.item.Id.ToString();
         }
 
-        readonly Components.CSEmulatorItemHandler csItemHandler;
+        public Components.CSEmulatorItemHandler csItemHandler { get; private set; }
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly IMessageSender messageSender;
         readonly ClusterVR.CreatorKit.Item.Implements.MovableItem movableItem;

@@ -68,11 +68,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 //このタイミングでItemHandleがスクリプト空間を超えるので
                 //owner(スクリプト空間主＝$)が切り替わる。
                 var sender = new EmulateClasses.ItemHandle(
-                    message.sender,
+                    message.sender, //senderのItemHandleということ
                     owner,
                     this
                 );
-                receiver.Invoke(message.requestName, message.arg, sender);
+                var arg = EmulateClasses.StateProxy.SanitizeSingleValue(
+                    message.arg,
+                    h => new EmulateClasses.ItemHandle(
+                        h.csItemHandler,
+                        owner,
+                        this
+                    )
+                );
+                receiver.Invoke(message.requestName, arg, sender);
             }
         }
 

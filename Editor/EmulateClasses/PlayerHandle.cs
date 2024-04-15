@@ -28,8 +28,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addVelocity(EmulateVector3 velocity)
         {
-            //CSETODO PreviewOnly下のDesktopPlayerControllerを丸ごと入れ替えるしかない？
-            UnityEngine.Debug.Log("ごめんなさい。addVelocityは対応中です。");
+            playerController.addVelocity(velocity._ToUnityEngine());
         }
 
         public bool exists()

@@ -54,6 +54,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         void Respawn();
 
+        void addVelocity(UnityEngine.Vector3 velocity);
+
         UnityEngine.Vector3 getPosition();
         UnityEngine.Quaternion getRotation();
         void setPosition(UnityEngine.Vector3 position);

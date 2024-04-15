@@ -42,7 +42,56 @@ namespace Assets.KaomoLab.CSEmulator
             {
                 return c;
             }
+        }
 
+        public static string ObjectArrayToString(
+            object[] objectArray
+        )
+        {
+            return "[" + String.Join(",", objectArray.Select(o =>
+            {
+                if (o is string str)
+                    return "\"" + str + "\"";
+                return o.ToString();
+            })) + "]";
+        }
+
+        public static string ExpandoObjectToString(
+            System.Dynamic.ExpandoObject eo,
+            string openb = "{\n", string closeb = "}\n",
+            string indent = " ", string separator = ",\n",
+            int depth = 0, string _pref = "", string _suff = ""
+        )
+        {
+            var pref = _pref + indent + openb;
+            var suff = indent + closeb + _suff;
+            depth++;
+            var ind = String.Concat(Enumerable.Repeat(indent, depth).ToArray());
+            var body = pref;
+            foreach (var kv in eo)
+            {
+                body += ind + kv.Key + ":";
+                if (kv.Value is System.Dynamic.ExpandoObject _eo)
+                {
+                    body += ExpandoObjectToString(_eo, openb, closeb, indent, separator, depth, _pref, _suff);
+                }
+                else if (kv.Value is object[] oa)
+                {
+                    body += ObjectArrayToString(oa);
+                }
+                else if (kv.Value is string str)
+                {
+                    body += "\"" + str + "\"";
+                }
+                else
+                {
+                    body += kv.Value.ToString();
+                }
+                body += separator;
+            }
+            body += suff;
+
+            return body;
         }
     }
 }

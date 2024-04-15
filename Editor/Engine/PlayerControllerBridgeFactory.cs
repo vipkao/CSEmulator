@@ -25,10 +25,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             if (csPlayerHandler == null) return null;
 
             var desktopPlayerController = csPlayerHandler.GetComponentInParent<ClusterVR.CreatorKit.Preview.PlayerController.DesktopPlayerController>();
-            if(desktopPlayerController != null)
+            if (desktopPlayerController != null)
+            {
+                var csPlayerController = desktopPlayerController.gameObject.GetComponent<Components.CSEmulatorPlayerController>();
                 return new CSEmulator.Editor.EmulateClasses.CCKPlayerControllerBridge(
-                    csPlayerHandler, desktopPlayerController, spawnPointManager
+                    csPlayerHandler, csPlayerController, desktopPlayerController, spawnPointManager
                 );
+            }
 
             //モブキャラスポーン機能つけたら、この辺りに新しいIPlayerController生成を追加。
             UnityEngine.Debug.Log("IPlayerController not create." + csPlayerHandler);

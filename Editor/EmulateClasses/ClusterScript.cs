@@ -331,17 +331,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 CSEmulator.Commons.BuildLayerMask(0, 11, 14, 18), //Default, RidingItem, InteractableItem, GrabbingItem
                 QueryTriggerInteraction.Collide
             )
-                .Select(c => new { i = c.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IItem>(), c = c })
+                .Select(c => new {
+                    i = c.gameObject.GetComponentInParent<ClusterVR.CreatorKit.Item.IItem>(),
+                    c = c
+                })
                 .Where(t => t.i != null)
-                .Select(t => new { go = t.i.gameObject, c = t.c })
                 .Where(t =>
                 {
-                    if (null != t.go.GetComponent<ClusterVR.CreatorKit.Item.IPhysicalShape>()) return true;
-                    if (null != t.go.GetComponent<ClusterVR.CreatorKit.Item.IOverlapSourceShape>()) return true;
-                    if (!t.c.isTrigger) return true;
+                    if (null != t.c.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IPhysicalShape>())
+                        return true;
+                    if (null != t.c.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IOverlapSourceShape>())
+                        return true;
+                    if (!t.c.isTrigger)
+                        return true;
                     return false;
                 })
-                .Select(t => t.go.GetComponent<Components.CSEmulatorItemHandler>())
+                .Select(t => t.i.gameObject.GetComponent<Components.CSEmulatorItemHandler>())
                 .Select(h => new ItemHandle(h, this.csItemHandler, messageSender))
                 .ToArray();
             return handles;
@@ -418,10 +423,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 UnityEngine.Debug.Log("");
             }
-            else if(v is System.Dynamic.ExpandoObject eo)
+            else if (v is System.Object[] oa)
             {
-                //CSETODO これ何とかしていい感じに表示させたい。
-                UnityEngine.Debug.Log("[object]");
+                UnityEngine.Debug.Log(CSEmulator.Commons.ObjectArrayToString(oa));
+            }
+            else if (v is System.Dynamic.ExpandoObject eo)
+            {
+                UnityEngine.Debug.Log(CSEmulator.Commons.ExpandoObjectToString(eo, openb: "{", closeb: "}", indent: "", separator: ","));
             }
             else
             {

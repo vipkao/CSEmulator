@@ -45,6 +45,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             }
 
             var csPlayerHandler = vrmInstance.AddComponent<Components.CSEmulatorPlayerHandler>();
+            var characterController = vrmInstance.GetComponentInParent<CharacterController>();
+            var csPlayerController = characterController.gameObject.AddComponent<Components.CSEmulatorPlayerController>();
+            csPlayerController.Construct(characterController);
 
             return vrmInstance;
         }

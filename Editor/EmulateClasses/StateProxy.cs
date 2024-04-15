@@ -35,11 +35,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
         }
 
-        public static object SanitizeSingleValue(object value)
+        public static object SanitizeSingleValue(
+            object value,
+            Func<ItemHandle, ItemHandle> SanitizeItemHandle = null
+        )
         {
             if (value == null)
             {
                 return Jint.Native.JsValue.Undefined;
+            }
+            else if (value is Jint.Native.JsValue jsv && jsv == Jint.Native.JsValue.Undefined)
+            {
+                return jsv;
             }
             else if (value is bool boolValue)
             {
@@ -68,13 +75,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is Delegate)
             {
-                UnityEngine.Debug.LogWarning("$.state dose not accept Function.");
-                throw new ClusterScriptError("$.state dose not accept Function.");
+                UnityEngine.Debug.LogWarning("state dose not accept Function.");
+                throw new ClusterScriptError("state dose not accept Function.");
             }
             else if (value is DateTime)
             {
                 //DateTimeつまりsignalの値を入れようとした場合は無視される
-                UnityEngine.Debug.LogWarning("$.state dose not accept *signal* value. use *double* value.");
+                UnityEngine.Debug.LogWarning("state dose not accept *signal* value. use *double* value.");
                 return Jint.Native.JsValue.Undefined;
             }
             else if (value is EmulateVector2 vector2)
@@ -91,7 +98,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is ItemHandle itemHandle)
             {
-                return itemHandle;
+                if(SanitizeItemHandle == null)
+                    return itemHandle;
+                return SanitizeItemHandle(itemHandle);
             }
             else if (value is PlayerHandle playerHandle)
             {
@@ -99,23 +108,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is System.Dynamic.ExpandoObject eo)
             {
-                return SanitizeExpandoObject(eo);
+                foreach (var kv in eo.ToArray())
+                {
+                    ((IDictionary<string, object>)eo)[kv.Key] = SanitizeSingleValue(kv.Value, SanitizeItemHandle);
+                }
+                return eo;
             }
-            else
-            {
-                var message = String.Format("$.state dose not accept [{0}].", value.GetType().Name);
-                UnityEngine.Debug.LogWarning(message);
-                throw new ClusterScriptError(message);
-            }
-        }
-        public static System.Dynamic.ExpandoObject SanitizeExpandoObject(System.Dynamic.ExpandoObject value)
-        {
-            foreach (var kv in value)
-            {
-                SanitizeSingleValue(kv.Value);
-            }
-            return value;
-        }
 
+            var message = String.Format("state dose not accept [{0}].", value.GetType().Name);
+            UnityEngine.Debug.LogWarning(message);
+            throw new ClusterScriptError(message);
+        }
     }
 }
