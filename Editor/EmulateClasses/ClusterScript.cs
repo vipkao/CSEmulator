@@ -15,25 +15,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     public class ClusterScript
     {
         readonly GameObject gameObject;
-        readonly ClusterVR.CreatorKit.Trigger.ISignalGenerator signalGenerator;
-        readonly ClusterVR.CreatorKit.Gimmick.IGimmickUpdater gimmickUpdater;
-        readonly ClusterVR.CreatorKit.Operation.ILogicStateRepository stateRepository;
-        readonly ClusterVR.CreatorKit.Operation.LogicExecutor logicExecutor;
-        readonly ClusterVR.CreatorKit.Editor.Preview.Item.ItemCreator itemCreator;
-        readonly ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer;
+        readonly ICckComponentFacade cckComponentFacade;
+        readonly IItemLifecycler itemLifecycler;
         readonly IUpdateListenerBinder updateListenerBinder;
         readonly IUpdateListenerBinder fixedUpdateListenerBinder;
         readonly IReceiveListenerBinder receiveListenerBinder;
         readonly IMessageSender messageSender;
         readonly ITextInputListenerBinder textInputListenerBinder;
-        readonly ITextInputSender textInputSender;
-        readonly IPrefabItemHolder prefabItemHolder;
-        readonly IPlayerHandleHolder playerHandleHolder;
-        readonly IPlayerControllerFactory playerControllerFactory;
+        readonly IItemOwnerHandler itemOwnerHandler;
+        readonly IPlayerHandleFactory playerHandleFactory;
         readonly IProgramStatus programStatus;
         readonly IItemExceptionFactory itemExceptionFactory;
-        readonly IUserInterfaceHandler userInterfaceHandler;
-        readonly ICodeEvaluater codeEvaluater;
+        readonly IExternalCaller externalCaller;
         readonly StateProxy stateProxy;
         readonly ILogger logger;
 
@@ -43,11 +36,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         readonly bool hasMovableItem;
         readonly bool hasCharacterItem;
-        readonly bool hasGrabbableItem;
-        readonly bool hasRidableItem;
-        readonly bool hasCollider;
 
-        bool isGrab = false;
         bool isInFixedUpdate = false;
 
         readonly BurstableThrottle createItemThrottle = new BurstableThrottle(0.09d, 5);
@@ -58,53 +47,39 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         Action<bool, PlayerHandle> OnRideHandler = (_, _) => { };
         Action<bool, PlayerHandle> OnUseHandler = (_, _) => { };
         Action<string, string, TextInputStatus> OnTextInputHandler = (_, _, _) => { };
+        Action<string, string, string> OnExternalCallEndHandler = (_, _, _) => { };
 
         Action OnInteractInitialize = () => { };
 
         public ClusterScript(
             GameObject gameObject,
-            ClusterVR.CreatorKit.Editor.Preview.RoomState.RoomStateRepository roomStateRepository,
-            ClusterVR.CreatorKit.Trigger.ISignalGenerator signalGenerator,
-            ClusterVR.CreatorKit.Gimmick.IGimmickUpdater gimmickUpdater,
-            ClusterVR.CreatorKit.Editor.Preview.Item.ItemCreator itemCreator,
-            ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer,
+            ICckComponentFacadeFactory cckComponentFacadeFactory,
+            IItemLifecycler itemLifecycler,
             IUpdateListenerBinder updateListenerBinder,
             IUpdateListenerBinder fixedUpdateListenerBinder,
             IReceiveListenerBinder receiveListenerBinder,
             IMessageSender messageSender,
             ITextInputListenerBinder textInputListenerBinder,
-            ITextInputSender textInputSender,
-            IPrefabItemHolder prefabItemHolder,
-            IPlayerHandleHolder playerHandleHolder,
-            IPlayerControllerFactory playerControllerFactory,
+            IItemOwnerHandler itemOwnerHandler,
+            IPlayerHandleFactory playerHandleFactory,
             IItemExceptionFactory itemExceptionFactory,
-            IUserInterfaceHandler userInterfaceHandler,
-            ICodeEvaluater codeEvaluater,
+            IExternalCaller externalCaller,
             StateProxy stateProxy,
             ILogger logger
         )
         {
             this.gameObject = gameObject;
-            this.stateRepository = CreateLogicStateRepositiory(roomStateRepository);
-            this.logicExecutor = new ClusterVR.CreatorKit.Operation.LogicExecutor(
-                signalGenerator, stateRepository, gimmickUpdater
-            );
-            this.signalGenerator = signalGenerator;
-            this.gimmickUpdater = gimmickUpdater;
-            this.itemCreator = itemCreator;
-            this.itemDestroyer = itemDestroyer;
+            this.cckComponentFacade = cckComponentFacadeFactory.Create(gameObject);
+            this.itemLifecycler = itemLifecycler;
             this.updateListenerBinder = updateListenerBinder;
             this.fixedUpdateListenerBinder = fixedUpdateListenerBinder;
             this.receiveListenerBinder = receiveListenerBinder;
             this.messageSender = messageSender;
             this.textInputListenerBinder = textInputListenerBinder;
-            this.textInputSender = textInputSender;
-            this.prefabItemHolder = prefabItemHolder;
-            this.playerHandleHolder = playerHandleHolder;
-            this.playerControllerFactory = playerControllerFactory;
+            this.itemOwnerHandler = itemOwnerHandler;
+            this.playerHandleFactory = playerHandleFactory;
             this.itemExceptionFactory = itemExceptionFactory;
-            this.userInterfaceHandler = userInterfaceHandler;
-            this.codeEvaluater = codeEvaluater;
+            this.externalCaller = externalCaller;
             this.stateProxy = stateProxy;
             this.logger = logger;
 
@@ -113,76 +88,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             csItemHandler.OnCollision += CsItemHandler_OnCollision;
             hasMovableItem = this.gameObject.TryGetComponent(out movableItem);
             hasCharacterItem = this.gameObject.TryGetComponent<ClusterVR.CreatorKit.Item.Implements.CharacterItem>(out var _);
-            hasGrabbableItem = false;
-            hasRidableItem = false;
-            hasCollider = (this.gameObject.GetComponentInChildren<Collider>() != null);
 
-            //ItemTrigger系と重複した時の挙動とか含めて、たぶんこれであってると思うけど自信ない。
-            if (this.gameObject.TryGetComponent<ClusterVR.CreatorKit.Item.Implements.GrabbableItem>(out var grabbableItem))
-            {
-                hasGrabbableItem = true;
-
-                //onGrabはGrabbableItemが必須で、共存可
-                grabbableItem.OnGrabbed += GrabbableItem_OnGrabbed;
-                grabbableItem.OnReleased += GrabbableItem_OnReleased;
-
-                if (!this.gameObject.TryGetComponent<ClusterVR.CreatorKit.Trigger.Implements.UseItemTrigger>(out var _))
-                {
-                    //onUseは既存のがあった場合は不発なので、こちらで追加して発火させる
-                    var useItemTrigger = this.gameObject.AddComponent<ClusterVR.CreatorKit.Trigger.Implements.UseItemTrigger>();
-                    useItemTrigger.TriggerEvent += UseItemTrigger_TriggerEvent;
-
-                    //downTriggersだけにダミーを入れておいて、downかupかを判定する材料にする。
-                    typeof(ClusterVR.CreatorKit.Trigger.Implements.UseItemTrigger)
-                        .GetField("downTriggersCache", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .SetValue(
-                            useItemTrigger,
-                            new ClusterVR.CreatorKit.Trigger.TriggerParam[]
-                            {
-                                new ClusterVR.CreatorKit.Trigger.TriggerParam(
-                                    ClusterVR.CreatorKit.Trigger.TriggerTarget.Item,
-                                    new ClusterVR.CreatorKit.Item.Implements.Item(),
-                                    "ahupa40t4ohpiu", //重複しないように適当
-                                    ClusterVR.CreatorKit.ParameterType.Bool,
-                                    new ClusterVR.CreatorKit.Trigger.TriggerValue(true)
-                                )
-                            }
-                        );
-                    typeof(ClusterVR.CreatorKit.Trigger.Implements.UseItemTrigger)
-                        .GetField("upTriggersCache", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .SetValue(
-                            useItemTrigger,
-                            new ClusterVR.CreatorKit.Trigger.TriggerParam[0]
-                        );
-                }
-            }
-            else if (this.gameObject.TryGetComponent<ClusterVR.CreatorKit.Item.Implements.RidableItem>(out var ridableItem))
-            {
-                hasRidableItem = true;
-                //onRideはRidableItemが必須で、共存可
-                ridableItem.OnGetOn += RidableItem_OnGetOn;
-                ridableItem.OnGetOff += RidableItem_OnGetOff;
-            }
-            //ContactableItemは共存できないのでelse if
-            else if (!this.gameObject.TryGetComponent<ClusterVR.CreatorKit.Trigger.Implements.InteractItemTrigger>(out var _))
-            {
-                //ここで実行すると、レイヤーが14:InteractableItem layerになってしまうため、onInteract登録時に実行する。
-                OnInteractInitialize = () =>
-                {
-                    //onInteractは既存のがあった場合は不発で、こちらで追加して発火
-                    var interactItemTrigger = this.gameObject.AddComponent<ClusterVR.CreatorKit.Trigger.Implements.InteractItemTrigger>();
-                    interactItemTrigger.TriggerEvent += InteractItemTrigger_TriggerEvent;
-
-                    typeof(ClusterVR.CreatorKit.Trigger.Implements.InteractItemTrigger)
-                        .GetField("triggers", BindingFlags.NonPublic | BindingFlags.Instance)
-                        .SetValue(
-                            interactItemTrigger,
-                            new ClusterVR.CreatorKit.Trigger.Implements.ConstantTriggerParam[0]
-                        );
-
-                    OnInteractInitialize = () => { };
-                };
-            }
+            cckComponentFacade.onGrabbed += CckComponentFacade_onGrabbed;
+            cckComponentFacade.onRide += CckComponentFacade_onRide;
+            cckComponentFacade.onInteract += CckComponentFacade_onInteract;
+            cckComponentFacade.onUse += CckComponentFacade_onUse;
 
         }
 
@@ -200,7 +110,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             set
             {
-                if (isGrab) return;
+                if (cckComponentFacade.isGrab) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.angularVelocity = value._ToUnityEngine();
             }
@@ -224,7 +134,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 var prefabItem = gameObject.GetComponent<CSEmulatorPrefabItem>();
 
-                //CSETODO nullでいい？エラーになる？
                 if (prefabItem == null) return null;
 
                 return new ItemTemplateId(prefabItem.id);
@@ -261,7 +170,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             set
             {
-                if (isGrab) return;
+                if (cckComponentFacade.isGrab) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.velocity = value._ToUnityEngine();
             }
@@ -324,6 +233,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return apiAudio;
         }
 
+        public void callExternal(
+            string request,
+            string meta
+        )
+        {
+            //CSETODO 実行回数制限を調査して入れる
+            externalCaller.CallExternal(request, meta);
+        }
+
         public ItemHandle createItem(
             ItemTemplateId itemTemplateId,
             EmulateVector3 position,
@@ -333,25 +251,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckCreateItemOperationLimit();
             CheckCreateItemDistanceLimit(position._ToUnityEngine());
 
-            //実行ごとにテンプレートを登録
-            var prefab = prefabItemHolder.GetPrefab(itemTemplateId.id);
-            var template = new CreateItemTemplate(prefab, itemTemplateId);
-            var AddItemTemplate = itemCreator.GetType().GetMethod("AddItemTemplate", BindingFlags.NonPublic | BindingFlags.Instance);
-            AddItemTemplate.Invoke(itemCreator, new object[1] { template });
-
-            ClusterVR.CreatorKit.Item.IItem create = null;
-            Action<ClusterVR.CreatorKit.Item.IItem> OnCreateCompleted = item =>
-            {
-                //イベント引数をキャプチャで取得する。
-                create = item;
-            };
-            itemCreator.OnCreateCompleted += OnCreateCompleted;
-            itemCreator.Create(
-                itemTemplateId.cckId,
-                position._ToUnityEngine(),
-                rotation._ToUnityEngine()
-            );
-            itemCreator.OnCreateCompleted -= OnCreateCompleted;
+            var create = itemLifecycler.CreateItem(itemTemplateId, position, rotation);
             if (create == null) return null;
 
             var csItemHandler = create.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
@@ -383,7 +283,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!arrowDestroy() && !csItemHandler.isCreatedItem)
                 throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("動的アイテムのみ実行可能です。クラフトアイテムの場合は[CS Emulator Prefab Item]コンポーネントを付けてください。");
-            itemDestroyer.Destroy(item);
+            itemLifecycler.DestroyItem(item);
         }
         bool arrowDestroy()
         {
@@ -391,12 +291,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             if (prefabItem == null) return false;
             var allow = prefabItem.allowDestroy;
             return allow;
-        }
-
-        //CSETODO 仮実装
-        public void eval(string code)
-        {
-            codeEvaluater.Evaluate(code);
         }
 
         public ItemHandle[] getItemsNear(EmulateVector3 position, float radius)
@@ -435,8 +329,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 {
                     var hitObject = HitObject.Create(
                         o.Item2, this.csItemHandler, o.Item3,
-                        playerControllerFactory,
-                        userInterfaceHandler, textInputSender, messageSender
+                        playerHandleFactory,
+                        messageSender
                     );
                     object selfNode = o.Item1 == "" ? this : subNode(o.Item1);
                     var ret = new Overlap(hitObject, selfNode);
@@ -454,9 +348,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             )
                 .Select(c => c.gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>())
                 .Where(h => h != null)
-                .Select(h => new PlayerHandle(
-                    playerControllerFactory.Create(h), userInterfaceHandler, textInputSender, csItemHandler
-                ))
+                .Select(h => playerHandleFactory.CreateById(h.id, csItemHandler))
                 .ToArray();
 
             return handles;
@@ -475,16 +367,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public object getStateCompat(string target, string key, string parameterType)
         {
-            //LogicStateRepository経由で操作すると、itemとかplayerとかVector3とかの面倒なあれこれをやってくれるので便利
-            var stateValueSet = stateRepository.GetRoomStateValueSet(
-                new ClusterVR.CreatorKit.Operation.SourceState(
-                    StringToGimmickTarget(target),
-                    key,
-                    StringToParameterType(parameterType)
-                ),
-                itemId
-            );
-            var sendable = StateValueSetToSendable(stateValueSet);
+            var sendable = cckComponentFacade.GetState(target, key, parameterType);
             return sendable;
         }
 
@@ -562,51 +445,30 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             OnCollideHandler.Invoke(collision);
         }
 
+        public void onExternalCallEnd(Action<string, string, string> Callback)
+        {
+            externalCaller.SetCallEndCallback(Callback);
+        }
+
         public void onGrab(Action<bool, bool, PlayerHandle> Callback)
         {
-            if (!hasGrabbableItem)
+            if (!cckComponentFacade.hasGrabbableItem)
             {
                 logger.Warning(String.Format("[{0}]onGrab() need [Grabbable Item] component.", this.gameObject.name));
             }
             OnGrabHandler = Callback;
         }
-        void GrabbableItem_OnGrabbed(bool isLeftHand)
+        private void CckComponentFacade_onGrabbed(bool isLeftHand, bool isGrab)
         {
-            isGrab = true;
             try
             {
                 //一旦右手＆オーナーの検出機能実装まで固定
-                var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
-                var owner = new PlayerHandle(
-                    player,
-                    userInterfaceHandler,
-                    textInputSender,
+                var owner = playerHandleFactory.CreateById(
+                    itemOwnerHandler.GetOwnerId(),
                     csItemHandler
                 );
-                player.ChangeGrabbing(true);
-                OnGrabHandler(true, false, owner);
-            }
-            catch (Exception e)
-            {
-                Commons.ExceptionLogger(e, gameObject);
-            }
-
-        }
-        void GrabbableItem_OnReleased(bool isLeftHand)
-        {
-            isGrab = false;
-            try
-            {
-                //一旦右手＆オーナーの検出機能実装まで固定
-                var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
-                var owner = new PlayerHandle(
-                    player,
-                    userInterfaceHandler,
-                    textInputSender,
-                    csItemHandler
-                );
-                player.ChangeGrabbing(false);
-                OnGrabHandler(false, false, owner);
+                owner._ChangeGrabbing(isGrab);
+                OnGrabHandler(isGrab, false, owner);
             }
             catch (Exception e)
             {
@@ -616,24 +478,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void onInteract(Action<PlayerHandle> Callback)
         {
-            if (!hasCollider)
+            if (!cckComponentFacade.hasCollider)
             {
                 logger.Warning(String.Format("[{0}]onInteract() need [Collider] component.", this.gameObject.name));
                 return;
             }
 
             //コライダーがある場合にのみInteractItemTriggerが付く仕様らしい
-            OnInteractInitialize();
+            cckComponentFacade.AddInteractItemTrigger();
             OnInteractHandler = Callback;
         }
-        void InteractItemTrigger_TriggerEvent(ClusterVR.CreatorKit.Trigger.IItemTrigger sender, ClusterVR.CreatorKit.Trigger.TriggerEventArgs e)
+        private void CckComponentFacade_onInteract()
         {
             try
             {
-                var owner = new PlayerHandle(
-                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
-                    userInterfaceHandler,
-                    textInputSender,
+                var owner = playerHandleFactory.CreateById(
+                    itemOwnerHandler.GetOwnerId(),
                     csItemHandler
                 );
                 OnInteractHandler(owner);
@@ -662,40 +522,21 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void onRide(Action<bool, PlayerHandle> Callback)
         {
-            if (!hasRidableItem)
+            if (!cckComponentFacade.hasRidableItem)
             {
                 logger.Warning(String.Format("[{0}]onRide() need [Ridable Item] component.", this.gameObject.name));
             }
             OnRideHandler = Callback;
         }
-        void RidableItem_OnGetOff()
+        private void CckComponentFacade_onRide(bool isOn)
         {
             try
             {
-                var owner = new PlayerHandle(
-                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
-                    userInterfaceHandler,
-                    textInputSender,
+                var owner = playerHandleFactory.CreateById(
+                    itemOwnerHandler.GetOwnerId(),
                     csItemHandler
                 );
-                OnRideHandler(false, owner);
-            }
-            catch (Exception e)
-            {
-                Commons.ExceptionLogger(e, gameObject);
-            }
-        }
-        void RidableItem_OnGetOn()
-        {
-            try
-            {
-                var owner = new PlayerHandle(
-                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
-                    userInterfaceHandler,
-                    textInputSender,
-                    csItemHandler
-                );
-                OnRideHandler(true, owner);
+                OnRideHandler(isOn, owner);
             }
             catch (Exception e)
             {
@@ -717,42 +558,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             OnUseHandler = Callback;
         }
-        private void UseItemTrigger_TriggerEvent(ClusterVR.CreatorKit.Trigger.IItemTrigger sender, ClusterVR.CreatorKit.Trigger.TriggerEventArgs e)
+        private void CckComponentFacade_onUse(bool isDown)
         {
-            //ダミーが入ってるならdown
-            if (e.TriggerParams.Length > 0)
+            try
             {
-                try
-                {
-                    var owner = new PlayerHandle(
-                        playerControllerFactory.Create(playerHandleHolder.GetOwner()),
-                        userInterfaceHandler,
-                        textInputSender,
-                        csItemHandler
-                    );
-                    OnUseHandler(true, owner);
-                }
-                catch (Exception ex)
-                {
-                    Commons.ExceptionLogger(ex, gameObject);
-                }
+                var owner = playerHandleFactory.CreateById(
+                    itemOwnerHandler.GetOwnerId(),
+                    csItemHandler
+                );
+                OnUseHandler(isDown, owner);
             }
-            else
+            catch (Exception ex)
             {
-                try
-                {
-                    var owner = new PlayerHandle(
-                        playerControllerFactory.Create(playerHandleHolder.GetOwner()),
-                        userInterfaceHandler,
-                        textInputSender,
-                        csItemHandler
-                    );
-                    OnUseHandler(false, owner);
-                }
-                catch (Exception ex)
-                {
-                    Commons.ExceptionLogger(ex, gameObject);
-                }
+                Commons.ExceptionLogger(ex, gameObject);
             }
         }
 
@@ -818,8 +636,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var csPlayerHandler = gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>();
             var hitObject = HitObject.Create(
                 csItemHandler, this.csItemHandler, csPlayerHandler,
-                playerControllerFactory,
-                userInterfaceHandler, textInputSender, messageSender
+                playerHandleFactory, messageSender
             );
 
             return hitObject;
@@ -827,27 +644,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void sendSignalCompat(string target, string key)
         {
-            //Signalを送るLogicを作って実行させている
-            var sendSignalLogic = new ClusterVR.CreatorKit.Operation.Logic(
-                new ClusterVR.CreatorKit.Operation.Statement[]
-                {
-                    new ClusterVR.CreatorKit.Operation.Statement(
-                        new ClusterVR.CreatorKit.Operation.SingleStatement(
-                            new ClusterVR.CreatorKit.Operation.TargetState(
-                                StringToTargetStateTarget(target),
-                                key,
-                                ClusterVR.CreatorKit.ParameterType.Signal
-                            ),
-                            new ClusterVR.CreatorKit.Operation.Expression(
-                                new ClusterVR.CreatorKit.Operation.Value(
-                                    new ClusterVR.CreatorKit.Operation.ConstantValue(true)
-                                )
-                            )
-                        )
-                    )
-                }
-            );
-            logicExecutor.Execute(sendSignalLogic, itemId);
+            cckComponentFacade.SendSignal(target, key);
         }
 
         public void setPosition(EmulateVector3 v)
@@ -878,49 +675,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setStateCompat(string target, string key, object value)
         {
-            //Logicを作って値を送る方式をとっていた。
-            //しかし、ConstantValueでdouble値が送れないという問題が発覚した。
-            //そのため、LogicExecuterの処理を参考に記述することにした。
-            //将来LogicExecuterの処理がどう変更されるか分からないので要注意。
-            var updatedKeys = new Queue<string>();
-            var stateValueSet = ObjectToStateValueSet(value);
-            var parameterType = stateValueSet.ParameterType;
-            var targetState = new ClusterVR.CreatorKit.Operation.TargetState(
-                StringToTargetStateTarget(target),
-                key,
-                stateValueSet.ParameterType
-            );
-            stateRepository.UpdateState(
-                targetState,
-                itemId,
-                stateValueSet.CastTo(parameterType),
-                updatedKeys
-            );
-            gimmickUpdater.OnStateUpdated(updatedKeys);
-
-
-            ////値を設定するLogicを作って実行させている
-            //var constantValue = ObjectToConstantValue(value);
-            //var setStateLogic = new ClusterVR.CreatorKit.Operation.Logic(
-            //    new ClusterVR.CreatorKit.Operation.Statement[]
-            //    {
-            //        new ClusterVR.CreatorKit.Operation.Statement(
-            //            new ClusterVR.CreatorKit.Operation.SingleStatement(
-            //                new ClusterVR.CreatorKit.Operation.TargetState(
-            //                    StringToTargetStateTarget(target),
-            //                    key,
-            //                    constantValue.Type
-            //                ),
-            //                new ClusterVR.CreatorKit.Operation.Expression(
-            //                    new ClusterVR.CreatorKit.Operation.Value(
-            //                        constantValue
-            //                    )
-            //                )
-            //            )
-            //        )
-            //    }
-            //);
-            //logicExecutor.Execute(setStateLogic, itemId);
+            cckComponentFacade.SetState(target, key, value);
         }
 
         public SubNode subNode(string subNodeName)
@@ -955,134 +710,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return null;
         }
 
-
-
-        ClusterVR.CreatorKit.Operation.ILogicStateRepository CreateLogicStateRepositiory(
-            ClusterVR.CreatorKit.Editor.Preview.RoomState.RoomStateRepository roomStateRepository
-        )
-        {
-            //RoomStateRepositoryへの値の出し入れはLogicStateRepositoryが行っていそうなので
-            var asm = typeof(ClusterVR.CreatorKit.Editor.Preview.Operation.LogicManager).Assembly;
-            var type = asm.GetType(typeof(ClusterVR.CreatorKit.Editor.Preview.Operation.LogicManager).FullName + "+LogicStateRepository");
-            var ctor = type.GetConstructors(BindingFlags.Instance | BindingFlags.NonPublic).First();
-            var ret = (ClusterVR.CreatorKit.Operation.ILogicStateRepository)ctor.Invoke(new object[] { roomStateRepository });
-            return ret;
-        }
-
-        object StateValueSetToSendable(
-            ClusterVR.CreatorKit.IStateValueSet stateValueSet
-        )
-        {
-            switch (stateValueSet.ParameterType)
-            {
-                case ClusterVR.CreatorKit.ParameterType.Bool:
-                    return stateValueSet.ToGimmickValue().BoolValue;
-                case ClusterVR.CreatorKit.ParameterType.Double:
-                    return stateValueSet.GetStateValue(new ClusterVR.CreatorKit.FieldName()).ToDouble();
-                case ClusterVR.CreatorKit.ParameterType.Float:
-                    return stateValueSet.GetStateValue(new ClusterVR.CreatorKit.FieldName()).ToFloat();
-                case ClusterVR.CreatorKit.ParameterType.Integer:
-                    return stateValueSet.GetStateValue(new ClusterVR.CreatorKit.FieldName()).ToInt();
-                case ClusterVR.CreatorKit.ParameterType.Signal:
-                    return stateValueSet.GetStateValue(new ClusterVR.CreatorKit.FieldName()).ToDateTime();
-                case ClusterVR.CreatorKit.ParameterType.Vector2:
-                    return new EmulateVector2(
-                        stateValueSet.ToGimmickValue().Vector2Value
-                    );
-                case ClusterVR.CreatorKit.ParameterType.Vector3:
-                    return new EmulateVector3(
-                        stateValueSet.ToGimmickValue().Vector3Value
-                    );
-                default: throw new NotImplementedException(stateValueSet.ParameterType.ToString());
-            }
-        }
-
-        ClusterVR.CreatorKit.Operation.TargetStateTarget StringToTargetStateTarget(
-            string target
-        )
-        {
-            switch (target)
-            {
-                case "this": return ClusterVR.CreatorKit.Operation.TargetStateTarget.Item;
-                case "owner": return ClusterVR.CreatorKit.Operation.TargetStateTarget.Player;
-                default: throw new ArgumentException(target);
-            }
-        }
-
-        ClusterVR.CreatorKit.Gimmick.GimmickTarget StringToGimmickTarget(
-            string target
-        )
-        {
-            switch (target)
-            {
-                case "this": return ClusterVR.CreatorKit.Gimmick.GimmickTarget.Item;
-                case "owner": return ClusterVR.CreatorKit.Gimmick.GimmickTarget.Player;
-                case "global": return ClusterVR.CreatorKit.Gimmick.GimmickTarget.Global;
-                default: throw new ArgumentException(target);
-            }
-        }
-
-        ClusterVR.CreatorKit.ParameterType StringToParameterType(
-            string parameterType
-        )
-        {
-            switch (parameterType)
-            {
-                case "signal": return ClusterVR.CreatorKit.ParameterType.Signal;
-                case "boolean": return ClusterVR.CreatorKit.ParameterType.Bool;
-                case "float": return ClusterVR.CreatorKit.ParameterType.Float;
-                case "double": return ClusterVR.CreatorKit.ParameterType.Double;
-                case "integer": return ClusterVR.CreatorKit.ParameterType.Integer;
-                case "vector2": return ClusterVR.CreatorKit.ParameterType.Vector2;
-                case "vector3": return ClusterVR.CreatorKit.ParameterType.Vector3;
-                default: throw new ArgumentException(parameterType);
-            }
-        }
-
-        ClusterVR.CreatorKit.Operation.ConstantValue ObjectToConstantValue(
-            object value
-        )
-        {
-            switch (value)
-            {
-                case bool boolValue:
-                    return new ClusterVR.CreatorKit.Operation.ConstantValue(boolValue);
-                case double doubleValue:
-                    //numberはdoubleになるけど、ConstantValueはfloatまで
-                    return new ClusterVR.CreatorKit.Operation.ConstantValue((float)doubleValue);
-                case EmulateVector2 vector2Value:
-                    return new ClusterVR.CreatorKit.Operation.ConstantValue(
-                        vector2Value._ToUnityEngine()
-                    );
-                case EmulateVector3 vector3Value:
-                    return new ClusterVR.CreatorKit.Operation.ConstantValue(
-                        vector3Value._ToUnityEngine()
-                    );
-                default: throw new NotImplementedException();
-            }
-        }
-
-        ClusterVR.CreatorKit.IStateValueSet ObjectToStateValueSet(
-            object value
-        )
-        {
-            switch (value)
-            {
-                case bool boolValue:
-                    return new ClusterVR.CreatorKit.BoolStateValueSet(boolValue);
-                case double doubleValue:
-                    return new ClusterVR.CreatorKit.DoubleStateValueSet(doubleValue);
-                case EmulateVector2 vector2Value:
-                    return new ClusterVR.CreatorKit.Vector2StateValueSet(
-                        vector2Value._ToUnityEngine()
-                    );
-                case EmulateVector3 vector3Value:
-                    return new ClusterVR.CreatorKit.Vector3StateValueSet(
-                        vector3Value._ToUnityEngine()
-                    );
-                default: throw new NotImplementedException();
-            }
-        }
 
         public void DischargeOperateLimit(double time)
         {

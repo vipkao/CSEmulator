@@ -15,6 +15,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
         const string UNIVRAM_PACKAGE = "Assets/VRM/package.json";
         bool isValidUniVrm = false;
 
+        private Vector2 scroll = Vector2.zero;
+
+
         [System.Serializable]
         public class UniVrmPackage
         {
@@ -39,6 +42,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             }
             EditorGUILayout.EndHorizontal();
 
+            scroll = EditorGUILayout.BeginScrollView(scroll);
+
+
             CheckUniVrmVersion();
 
             var op = Bootstrap.options;
@@ -56,7 +62,21 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             EditorGUILayout.HelpBox(
                 "現在はVRMモデルの挙動のみに影響します。視点は一人称のままです。", MessageType.Info
             );
+
+            EditorGUILayout.LabelField("PlayerHandle");
+            op.exists = EditorGUILayout.Toggle(new GUIContent("　.exists", "PlayerHandle.existsの値を指定できます。"), op.exists);
+            op.userId = EditorGUILayout.TextField(new GUIContent("　.userId", "PlayerHandle.userIdの値を指定できます。"), op.userId);
+            if (!op.userIdPattern.IsMatch(op.userId))
+            {
+                EditorGUILayout.HelpBox(
+                    "userIdの形式ではありません。", MessageType.Warning
+                );
+            }
+            op.userName = EditorGUILayout.TextField(new GUIContent("　.userDisplayName", "\"PlayerHandle.userDisplayNameの値を指定できます。"), op.userName);
             EditorGUILayout.Separator();
+            op.callExternalUrl = EditorGUILayout.TextField(new GUIContent("callExternal用URL"), op.callExternalUrl);
+            EditorGUILayout.Separator();
+
             EditorGUILayout.LabelField("以下はプレビュー開始前に設定してください。");
             op.enable = EditorGUILayout.Toggle("ClusterScriptを実行する。", op.enable);
             op.vrm = (GameObject)EditorGUILayout.ObjectField("動作確認用のVRM", op.vrm, typeof(GameObject), false);
@@ -68,6 +88,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             }
             op.debug = EditorGUILayout.Toggle("デバッグモードで実行する。", op.debug);
             EditorGUILayout.LabelField("　動作が遅くなりますが、ログ出力が詳細になります。");
+
+
+            EditorGUILayout.EndScrollView();
         }
 
         void CheckUniVrmVersion()

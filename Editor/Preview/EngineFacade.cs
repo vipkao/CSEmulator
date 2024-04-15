@@ -1,4 +1,5 @@
-﻿using Assets.KaomoLab.CSEmulator.Editor.Engine;
+﻿using Assets.KaomoLab.CSEmulator.Editor.EmulateClasses;
+using Assets.KaomoLab.CSEmulator.Editor.Engine;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,8 +16,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         readonly PrefabItemStore prefabItemStore;
         readonly ItemMessageRouter itemMessageRouter;
         readonly TextInputRouter textInputRouter;
-        readonly PlayerHandlerStore playerHandleStore;
-        readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
+        readonly PlayerHandleFactory playerHandleFactory;
         readonly UserInterfacePreparer userInterfacePreparer;
         readonly OptionBridge optionBridge;
 
@@ -48,12 +48,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             );
             itemMessageRouter = new ItemMessageRouter();
             textInputRouter = new TextInputRouter();
-            playerHandleStore = new PlayerHandlerStore();
-            playerControllerBridgeFactory = new PlayerControllerBridgeFactory(
-                spawnPointManager
-            );
             userInterfacePreparer = new UserInterfacePreparer(
                 previewFinder
+            );
+            playerHandleFactory = new PlayerHandleFactory(
+                userInterfacePreparer, textInputRouter, spawnPointManager
             );
             this.optionBridge = optionBridge;
 
@@ -86,9 +85,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 csItemHandler.Construct(false);
             }
 
-            //このタイミングでよさそう
+            //StartRunner前にVRMをInstantinateするのは合ってる。
+            //しかし複数プレイヤーを考えるとこれは雑なのでそのうち何とかする。
             vrm = vrmPreparer.InstantiateVrm();
-            playerHandleStore.AddVrm(vrm);
+            playerHandleFactory.AddPlayer(vrm, optionBridge);
 
             //各種コンポーネントを付けてから実行した方がいい気がする。
             var newRunners = itemCollector
@@ -111,9 +111,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 prefabItemStore,
                 itemMessageRouter,
                 textInputRouter,
-                playerHandleStore,
-                playerControllerBridgeFactory,
-                userInterfacePreparer,
+                playerHandleFactory,
                 optionBridge,
                 loggerFactory
             );

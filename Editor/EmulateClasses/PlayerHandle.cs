@@ -9,27 +9,45 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class PlayerHandle
     {
-        public string id => playerController.id;
-
-        public IPlayerController playerController { get; private set; }
-        public IUserInterfaceHandler userInterfaceHandler { get; private set; }
-        public ITextInputSender textInputSender { get; private set; }
+        readonly IPlayerMeta playerMeta;
+        readonly IPlayerController playerController;
+        readonly IUserInterfaceHandler userInterfaceHandler;
+        readonly ITextInputSender textInputSender;
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
 
         //csOwnerItemHandlerとはこのハンドルがいるスクリプト空間($)のこと。
         public PlayerHandle(
+            IPlayerMeta playerMeta,
             IPlayerController playerController,
             IUserInterfaceHandler userInterfaceHandler,
             ITextInputSender textInputSender,
             Components.CSEmulatorItemHandler csOwnerItemHandler
         )
         {
+            this.playerMeta = playerMeta;
             this.playerController = playerController;
             this.userInterfaceHandler = userInterfaceHandler;
             this.textInputSender = textInputSender;
             this.csOwnerItemHandler = csOwnerItemHandler;
         }
+        public PlayerHandle(
+            PlayerHandle source,
+            Components.CSEmulatorItemHandler csOwnerItemHandler
+        )
+        {
+            this.playerMeta = source.playerMeta;
+            this.playerController = source.playerController;
+            this.userInterfaceHandler = source.userInterfaceHandler;
+            this.textInputSender = source.textInputSender;
+            this.csOwnerItemHandler = csOwnerItemHandler;
+        }
+
+        public string id => playerController.id;
+
+        public string userId => playerMeta.exists ? playerMeta.userId : null;
+        public string userDisplayName => playerMeta.exists ? playerMeta.userDisplayName : null;
+
 
         public void addVelocity(EmulateVector3 velocity)
         {
@@ -41,7 +59,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public bool exists()
         {
-            return playerController.exists;
+            return playerMeta.exists ? playerController.exists : false;
         }
 
         public EmulateVector3 getHumanoidBonePosition(HumanoidBone bone)
@@ -242,6 +260,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             throw csOwnerItemHandler.itemExceptionFactory.CreateRateLimitExceeded(
                 String.Format("[{0}]>>>[Player]", csOwnerItemHandler)
             );
+        }
+
+        public void _ChangeGrabbing(bool isGrab)
+        {
+            playerController.ChangeGrabbing(isGrab);
         }
 
         public object toJSON(string key)

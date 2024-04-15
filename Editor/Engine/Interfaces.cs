@@ -14,5 +14,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     public interface IRunnerOptions
     {
         bool isDebug { get; }
+        IUrlHolder urlHolder { get; }
+    }
+
+    public interface IUrlHolder
+    {
+        string url { get; }
     }
 }

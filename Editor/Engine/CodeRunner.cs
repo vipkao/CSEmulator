@@ -9,50 +9,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 {
     public class CodeRunner
     {
-        //Startのタイミングが任意であるため、インスタンスメンバをできる限りnullにしたくないという思想。
-        public class CodeEvaluater
-            : EmulateClasses.ICodeEvaluater
-        {
-            readonly GameObject gameObject;
-            readonly Jint.Engine engine;
-
-            public CodeEvaluater(
-                GameObject gameObject,
-                Jint.Engine engine
-            )
-            {
-                this.gameObject = gameObject;
-                this.engine = engine;
-            }
-
-            public void Evaluate(string code)
-            {
-                try
-                {
-                    engine.Execute(code);
-                }
-                catch (Exception e)
-                {
-                    Commons.ExceptionLogger(e, gameObject);
-                }
-            }
-        }
 
         readonly UnityEngine.GameObject gameObject;
         readonly string code;
         public readonly Components.CSEmulatorItemHandler csItemHandler;
         readonly PrefabItemStore prefabItemStore;
-        readonly EmulateClasses.EmulateClassFactory emulateClassFactory;
+        readonly ItemMessageRouter itemMessageRouter;
+        readonly TextInputRouter textInputRouter;
+        readonly PlayerHandleFactory playerHandleFactory;
+        readonly IRunnerOptions options;
+        readonly ILoggerFactory loggerFactory;
+
         readonly EmulateClasses.StateProxy stateProxy;
         readonly OnUpdateBridge onUpdateBridge;
         readonly OnUpdateBridge onFixedUpdateBridge;
-        readonly ItemMessageRouter itemMessageRouter;
-        readonly TextInputRouter textInputRouter;
-        readonly PlayerHandlerStore playerHandleStore;
-        readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
-        readonly UserInterfacePreparer userInterfacePreparer;
-        readonly IRunnerOptions options;
-        readonly ILoggerFactory loggerFactory;
+        readonly CckComponentFacadeFactory cckComponentFacadeFactory;
+        readonly ItemLifecycler itemLifecycler;
 
         List<Action> shutdownActions = new List<Action>();
         bool isRunning = false;
@@ -63,9 +35,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             PrefabItemStore prefabItemStore,
             ItemMessageRouter itemMessageRouter,
             TextInputRouter textInputRouter,
-            PlayerHandlerStore playerHandleStore,
-            PlayerControllerBridgeFactory playerControllerBridgeFactory,
-            UserInterfacePreparer userInterfacePreparer,
+            PlayerHandleFactory playerHandleFactory,
             IRunnerOptions options,
             ILoggerFactory loggerFactory
         )
@@ -75,9 +45,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.prefabItemStore = prefabItemStore;
             this.itemMessageRouter = itemMessageRouter;
             this.textInputRouter = textInputRouter;
-            this.playerHandleStore = playerHandleStore;
-            this.playerControllerBridgeFactory = playerControllerBridgeFactory;
-            this.userInterfacePreparer = userInterfacePreparer;
+            this.playerHandleFactory = playerHandleFactory;
             this.options = options;
             this.loggerFactory = loggerFactory;
 
@@ -89,9 +57,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             onFixedUpdateBridge = new OnUpdateBridge();
 
-            emulateClassFactory = new EmulateClasses.EmulateClassFactory();
-
             stateProxy = new EmulateClasses.StateProxy();
+
+            cckComponentFacadeFactory = new CckComponentFacadeFactory(
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.RoomStateRepository,
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SignalGenerator,
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.GimmickManager
+            );
+
+            itemLifecycler = new ItemLifecycler(
+                prefabItemStore,
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemCreator,
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer
+            );
 
         }
 
@@ -109,22 +87,25 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var logger = loggerFactory.Create(new JintProgramStatus(engine));
             var exceptionFactory = new ByEngineExceptionFactory(engine);
             csItemHandler.itemExceptionFactory = exceptionFactory;
-            var codeEvaluater = new CodeEvaluater(gameObject, engine);
 
-            var clusterScript = emulateClassFactory.CreateDefaultClusterScript(
+            var externalHttpCaller = new ExternalHttpCaller(
+                options.urlHolder,
+                logger
+            );
+
+            var clusterScript = new EmulateClasses.ClusterScript(
                 gameObject,
+                cckComponentFacadeFactory,
+                itemLifecycler,
                 onUpdateBridge,
                 onFixedUpdateBridge,
                 itemMessageRouter,
                 itemMessageRouter,
                 textInputRouter,
-                textInputRouter,
-                prefabItemStore,
-                playerHandleStore,
-                playerControllerBridgeFactory,
+                playerHandleFactory,
+                playerHandleFactory,
                 exceptionFactory,
-                userInterfacePreparer,
-                codeEvaluater,
+                externalHttpCaller,
                 stateProxy,
                 logger
             );
@@ -141,6 +122,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             SetClass<EmulateClasses.TextAlignment>(engine, "TextAlignment");
             SetClass<EmulateClasses.TextAnchor>(engine, "TextAnchor");
             SetClass<EmulateClasses.TextInputStatus>(engine, "TextInputStatus");
+            //CSETODO instanceof ClusterScriptErrorで反応しない。js上ではただのErrorになっている？
+            SetClass<Editor.ClusterScriptError>(engine, "ClusterScriptError");
 
             try
             {

@@ -24,17 +24,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CSEmulator.Components.CSEmulatorItemHandler csItemHandler,
             CSEmulator.Components.CSEmulatorItemHandler csItemOwnerHandler,
             CSEmulator.Components.CSEmulatorPlayerHandler csPlayerHandler,
-            IPlayerControllerFactory olayerControllerFactory,
-            IUserInterfaceHandler userInterfaceHandler,
-            ITextInputSender textInputSender,
+            IPlayerHandleFactory playerHandleFactory,
             IMessageSender messageSender
         )
         {
             var itemHandler = csItemHandler == null ? null : new ItemHandle(csItemHandler, csItemOwnerHandler, messageSender);
-            var playerHandler = csPlayerHandler == null ? null : new PlayerHandle(
-                olayerControllerFactory.Create(csPlayerHandler),
-                userInterfaceHandler,
-                textInputSender,
+            var playerHandler = csPlayerHandler == null ? null : playerHandleFactory.CreateById(
+                csPlayerHandler.id,
                 csItemOwnerHandler
             );
             var hitObject = new HitObject(itemHandler, playerHandler);

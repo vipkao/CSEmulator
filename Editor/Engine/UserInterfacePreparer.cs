@@ -12,16 +12,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         : EmulateClasses.IUserInterfaceHandler
     {
         readonly CckPreviewFinder previewFinder;
-        readonly UIs.TextInput.Handler uiTextInput;
+        UIs.TextInput.Handler uiTextInput = null;
 
         public UserInterfacePreparer(
             CckPreviewFinder previewFinder
         )
         {
             this.previewFinder = previewFinder;
-            uiTextInput = LoadHandler<UIs.TextInput.Handler>(
-                "Assets/KaomoLab/CSEmulator/UIs/TextInput/View.prefab"
-            );
         }
 
         T LoadHandler<T>(string path)
@@ -33,10 +30,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             return ret;
         }
 
-        public bool isTextInputting => uiTextInput.isInputting;
+        public bool isTextInputting => uiTextInput != null ? uiTextInput.isInputting : false;
 
         public void StartTextInput(string caption, Action<string> SendCallback, Action CancelCallback, Action BusyCallback)
         {
+            //都度Instantiateする方法に変更した。
+            //インスタンスを残していると「Destroy may not be called from edit mode!」が出るため。
+            //なお、ExitingPlayModeでDestroyImmidiateしてもタイミングのよってはエラーが出てしまう。
+            uiTextInput = LoadHandler<UIs.TextInput.Handler>(
+                "Assets/KaomoLab/CSEmulator/UIs/TextInput/View.prefab"
+            );
+
             var image = previewFinder.panel.GetComponent<UnityEngine.UI.Image>();
             var controller = previewFinder.controller.GetComponent<ClusterVR.CreatorKit.Preview.PlayerController.DesktopPlayerController>();
             //ボタンクリックを拾わなくなるので
@@ -50,16 +54,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 text => {
                     image.raycastTarget = true;
                     controller.enabled = true;
+                    GameObject.DestroyImmediate(uiTextInput.gameObject);
+                    uiTextInput = null;
                     SendCallback(text);
                 },
                 () => {
                     image.raycastTarget = true;
                     controller.enabled = true;
+                    GameObject.DestroyImmediate(uiTextInput.gameObject);
+                    uiTextInput = null;
                     CancelCallback();
                 },
                 () => {
                     image.raycastTarget = true;
                     controller.enabled = true;
+                    GameObject.DestroyImmediate(uiTextInput.gameObject);
+                    uiTextInput = null;
                     BusyCallback();
                 }
             );

@@ -92,6 +92,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return gameObject.activeInHierarchy;
         }
 
+        public string name
+        {
+            get => gameObject.name;
+        }
+
         public void setEnabled(bool v)
         {
             if (gameObject == null) return;

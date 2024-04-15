@@ -109,11 +109,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is System.Dynamic.ExpandoObject eo)
             {
+                var newEo = new System.Dynamic.ExpandoObject();
                 foreach (var kv in eo.ToArray())
                 {
-                    ((IDictionary<string, object>)eo)[kv.Key] = SanitizeSingleValue(kv.Value, SanitizeItemHandle);
+                    ((IDictionary<string, object>)newEo)[kv.Key] = SanitizeSingleValue(kv.Value, SanitizeItemHandle);
                 }
-                return eo;
+                return newEo;
             }
 
             //CSETODO 実際は少し違う

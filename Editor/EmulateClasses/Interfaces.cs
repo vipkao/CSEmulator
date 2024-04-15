@@ -30,11 +30,26 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         UnityEngine.GameObject GetPrefab(string uuid);
     }
 
-    public interface IPlayerHandleHolder
+    //CSETODO itemをinteractされたとき、そのplayerをどう取得する？できる？
+    //それが解決するまでの仮
+    public interface IItemOwnerHandler
     {
-        Components.CSEmulatorPlayerHandler GetById(string id);
-        //ownerのidが取得できるようになったら不要
-        Components.CSEmulatorPlayerHandler GetOwner();
+        string GetOwnerId();
+    }
+
+    public interface IPlayerMeta
+    {
+        string userId { get; }
+        string userDisplayName { get; }
+        bool exists { get; }
+    }
+    public interface IPlayerMetaHolder
+    {
+        IPlayerMeta GetById(string id);
+    }
+    public interface IPlayerHandleFactory
+    {
+        PlayerHandle CreateById(string id, Components.CSEmulatorItemHandler csOwnerItemHandler);
     }
 
     public interface IPlayerControllerFactory
@@ -91,9 +106,54 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void Send(ulong id, string text, string meta, TextInputStatus status);
     }
 
-    public interface ICodeEvaluater
+    public interface IItemLifecycler
     {
-        void Evaluate(string code);
+        ClusterVR.CreatorKit.Item.IItem CreateItem(
+            ItemTemplateId itemTemplateId,
+            EmulateVector3 position,
+            EmulateQuaternion rotation
+        );
+        void DestroyItem(ClusterVR.CreatorKit.Item.IItem item);
+    }
+
+    public interface ICckComponentFacade
+    {
+        /// <summary>
+        /// bool isLeftHand
+        /// bool isGrab true:Grab false:Release
+        /// </summary>
+        event Handler<bool, bool> onGrabbed;
+
+        /// <summary>
+        /// bool isOn
+        /// </summary>
+        event Handler<bool> onRide;
+
+        /// <summary>
+        /// bool isDown
+        /// </summary>
+        event Handler<bool> onUse;
+
+        event Handler onInteract;
+        void AddInteractItemTrigger();
+
+        bool isGrab { get; }
+        bool hasCollider { get; }
+        bool hasGrabbableItem { get; }
+        bool hasRidableItem { get; }
+
+        public void SendSignal(string target, string key);
+        public void SetState(string target, string key, object value);
+        public object GetState(string target, string key, string parameterType);
+    }
+    public interface IExternalCaller
+    {
+        void CallExternal(string request, string meta);
+        void SetCallEndCallback(Action<string, string, string> Callback);
+    }
+    public interface ICckComponentFacadeFactory
+    {
+        ICckComponentFacade Create(UnityEngine.GameObject gameObject);
     }
 
 }

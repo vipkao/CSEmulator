@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -62,6 +63,33 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 if (path == "") path = DefaultVrmPath;
                 PlayerPrefs.SetString(PrefsKeyVrm, path);
             }
+        }
+
+        const string PrefsKeyUserId = "KaomoCSEmulator_userId";
+        public readonly Regex userIdPattern = new Regex(".*");
+        public string userId
+        {
+            get => PlayerPrefs.GetString(PrefsKeyUserId, "");
+            set => PlayerPrefs.SetString(PrefsKeyUserId, value);
+        }
+        const string PrefsKeyUserName = "KaomoCSEmulator_userName";
+        public string userName
+        {
+            get => PlayerPrefs.GetString(PrefsKeyUserName, "");
+            set => PlayerPrefs.SetString(PrefsKeyUserName, value);
+        }
+        const string PrefsKeyExists = "KaomoCSEmulator_exists";
+        public bool exists
+        {
+            get => PlayerPrefs.GetInt(PrefsKeyExists, 1) == 1;
+            set => PlayerPrefs.SetInt(PrefsKeyExists, value ? 1 : 0);
+        }
+
+        const string PrefsKeyCallExternalUrl = "KaomoCSEmulator_callExternalUrl";
+        public string callExternalUrl
+        {
+            get => PlayerPrefs.GetString(PrefsKeyCallExternalUrl, "");
+            set => PlayerPrefs.SetString(PrefsKeyCallExternalUrl, value);
         }
 
         const string PrefsKeyDebug = "KaomoCSEmulator_debug";

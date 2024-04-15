@@ -98,7 +98,9 @@ namespace Assets.KaomoLab.CSEmulator.UIs.TextInput
 
         void EndInput()
         {
-            ui.rootVisualElement.visible = false;
+            //Destroyされている可能性があるので
+            if(ui != null)
+                ui.rootVisualElement.visible = false;
             SendCallback = null;
             isInputting = false;
         }
