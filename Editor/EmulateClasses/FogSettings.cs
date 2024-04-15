@@ -18,7 +18,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public FogSettings()
         {
-            //CSETODO 本家のfogの挙動が調整された後に要確認
             //デフォルト値はLightingウィンドウで確認した値
             //color.setValue(0.5f, 0.5f, 0.5f, 1.0f);
             //density.setValue(0.01f);

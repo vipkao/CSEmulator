@@ -28,40 +28,55 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
         public void Apply()
         {
-            //CSETODO 2.8.0.1 enabledの挙動がactiveのそれと同じ模様
-            RenderSettings.fog = (this.enabled.overrideState ? this.enabled.value : _enabled) && this.active;
-
-            //CSETODO 2.8.0.1 fogModeを変えると設定が無視される模様
-            if (this.mode.overrideState && RenderSettings.fogMode != FogModeToEnum(this.mode.value, _mode))
+            //CCK2.9.0 デフォでOFFの場合は一切適用されない。
+            if (!_enabled)
             {
                 RenderSettings.fog = false;
-                RenderSettings.fogMode = this.mode.overrideState ? FogModeToEnum(this.mode.value, _mode) : _mode;
+                return;
+            }
+
+            if (this.active)
+            {
+                //CSETODO 2.8.0.1 fogModeを変えると設定が無視される模様
+                if (this.mode.overrideState && RenderSettings.fogMode != FogModeToEnum(this.mode.value, _mode))
+                {
+                    RenderSettings.fog = false;
+                    RenderSettings.fogMode = this.mode.overrideState ? FogModeToEnum(this.mode.value, _mode) : _mode;
+                }
+                else
+                {
+                    RenderSettings.fog = this.enabled.overrideState ? this.enabled.value : _enabled;
+                    RenderSettings.fogColor = this.color.overrideState ? this.color.value : _color;
+                    RenderSettings.fogDensity = this.density.overrideState ? this.density.value : _density;
+                    RenderSettings.fogEndDistance = this.end.overrideState ? this.end.value : _end;
+                    RenderSettings.fogMode = this.mode.overrideState ? FogModeToEnum(this.mode.value, _mode) : _mode;
+                    RenderSettings.fogStartDistance = this.start.overrideState ? this.start.value : _start;
+                }
             }
             else
             {
-                RenderSettings.fogColor = this.color.overrideState ? this.color.value : _color;
-                RenderSettings.fogDensity = this.density.overrideState ? this.density.value : _density;
-                RenderSettings.fogEndDistance = this.end.overrideState ? this.end.value : _end;
-                RenderSettings.fogMode = this.mode.overrideState ? FogModeToEnum(this.mode.value, _mode) : _mode;
-                RenderSettings.fogStartDistance = this.start.overrideState ? this.start.value : _start;
+                RenderSettings.fog = _enabled;
+                RenderSettings.fogColor = _color;
+                RenderSettings.fogDensity = _density;
+                RenderSettings.fogEndDistance = _end;
+                RenderSettings.fogMode = _mode;
+                RenderSettings.fogStartDistance = _start;
             }
         }
 
         public void Start()
         {
-            //CSETODO 2.8.0.1 色は指定した色ではなくデフォの灰色が設定される模様
-            _color = new Color(0.5f, 0.5f, 0.5f, 1.0f);
-            //_density = 0.01f;
-            //_enabled = false;
+            //_color = new Color(0.5f, 0.5f, 0.5f, 1.0f);
+            //_density = 0f;
             //_end = 300f;
             //_mode = FogMode.ExponentialSquared;
             //_start = 0f;
+            _enabled = RenderSettings.fog;
+            _color = RenderSettings.fogColor;
             _density = RenderSettings.fogDensity;
-            _enabled = false;
             _end = RenderSettings.fogEndDistance;
             _mode = RenderSettings.fogMode;
             _start = RenderSettings.fogStartDistance;
-
         }
 
         string FogModeToString(FogMode mode)
