@@ -52,6 +52,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             //        "VSYNCが有効なので、$.onUpdateに対してFPS制限が働きません。", MessageType.Warning
             //    );
             //}
+            op.perspective = EditorGUILayout.Toggle("一人称視点", op.perspective);
+            EditorGUILayout.HelpBox(
+                "現在はVRMモデルの挙動のみに影響します。視点は一人称のままです。", MessageType.Info
+            );
             EditorGUILayout.Separator();
             EditorGUILayout.LabelField("以下はプレビュー開始前に設定してください。");
             op.enable = EditorGUILayout.Toggle("ClusterScriptを実行する。", op.enable);

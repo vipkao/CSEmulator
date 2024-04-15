@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace Assets.KaomoLab.CSEmulator
 {
+    //CCKのIMoveInputControllerみたいにしたかったけど若干時すでに遅し
+    public interface IRawInput
+    {
+        Func<bool> IsForwardKey { get; }
+        Func<bool> IsBackKey { get; }
+        Func<bool> IsRightKey { get; }
+        Func<bool> IsLeftKey { get; }
+
+        Func<bool> IsRightHandKeyDown { get; }
+        Func<bool> IsRightHandKeyUp { get; }
+        Func<bool> IsLeftHandKeyDown { get; }
+        Func<bool> IsLeftHandKeyUp { get; }
+    }
     public interface IProgramStatus
     {
         string GetLineInfo();

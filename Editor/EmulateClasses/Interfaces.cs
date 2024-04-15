@@ -68,6 +68,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void SetHumanMuscles(float[] muscles, bool[] hasMascles);
         void InvalidateHumanMuscles();
         UnityEngine.HumanPose GetHumanPose();
+
+        void ChangeGrabbing(bool isGrab);
+        void ChangePerspective(bool isFirstPerson);
     }
 
 }

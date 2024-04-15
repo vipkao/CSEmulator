@@ -7,6 +7,7 @@ using System.Reflection;
 using UnityEngine;
 using ClusterVR.CreatorKit.Preview.PlayerController;
 using ClusterVR.CreatorKit.Editor.Preview.World;
+using ICckPlayerController = ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController;
 
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
@@ -15,12 +16,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     {
         readonly Components.CSEmulatorPlayerHandler csPlayerHandler;
         readonly Components.CSEmulatorPlayerController csPlayerController;
-        readonly DesktopPlayerController playerController;
+        readonly ICckPlayerController playerController;
         readonly SpawnPointManager spawnPointManager;
 
         public string id => csPlayerHandler.id;
 
-        public Transform transform => playerController.transform;
+        public Transform transform => playerController.PlayerTransform;
 
         //playerのswapn機能を追加して消去機能まで追加したらfalseにするようにする。
         public bool exists => true;
@@ -31,11 +32,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public float jumpSpeedRate
         {
-            set => ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController).SetJumpSpeedRate(value);
+            set => playerController.SetJumpSpeedRate(value);
         }
         public float moveSpeedRate
         {
-            set => ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController).SetMoveSpeedRate(value);
+            set => playerController.SetMoveSpeedRate(value);
         }
 
         public float gravity
@@ -49,7 +50,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public CCKPlayerControllerBridge(
             Components.CSEmulatorPlayerHandler csPlayerHandler,
             Components.CSEmulatorPlayerController csPlayerController,
-            DesktopPlayerController playerController,
+            ICckPlayerController playerController,
             SpawnPointManager spawnPointManager
         )
         {
@@ -67,10 +68,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             //PlayerPresenterがPlayerが一人のみ設計のようなのでコピペして引き取り。
             var yawOnlyRotation = Quaternion.Euler(0f, spawnPoint.YRotation, 0f);
-            ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController)
-                .SetRotationKeepingHeadPitch(yawOnlyRotation);
-            ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController)
-                .ResetCameraRotation(yawOnlyRotation);
+            playerController.SetRotationKeepingHeadPitch(yawOnlyRotation);
+            playerController.ResetCameraRotation(yawOnlyRotation);
         }
 
         public void AddVelocity(Vector3 velocity)
@@ -85,17 +84,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void SetRotation(Quaternion rotation)
         {
-            ((ClusterVR.CreatorKit.Preview.PlayerController.IPlayerController)playerController)
-                .SetRotationKeepingHeadPitch(rotation);
+            csPlayerController.ForceForward();
+            playerController.SetRotationKeepingHeadPitch(rotation);
         }
 
         public Vector3 GetPosition()
         {
-            return playerController.transform.position;
+            return transform.position;
         }
         public Quaternion GetRotation()
         {
-            return playerController.transform.Find("Root").transform.rotation;
+            var ret = csPlayerController.ApplyDirection(playerController.RootRotation);
+            return ret;
         }
 
         public void SetHumanPosition(Vector3? position)
@@ -121,6 +121,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public HumanPose GetHumanPose()
         {
             return csPlayerController.poseManager.GetHumanPose();
+        }
+
+        public void ChangeGrabbing(bool isGrab)
+        {
+            csPlayerController.ChangeGrabbing(isGrab);
+        }
+        public void ChangePerspective(bool isFirstPerson)
+        {
+            csPlayerController.ChangePerspective(isFirstPerson);
         }
     }
 }

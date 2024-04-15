@@ -10,6 +10,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
     public class EmulatorOptions
     {
         public event Handler OnChangedFps = delegate { };
+        public event Handler OnChangedPerspective = delegate { };
 
         const string PrefsKeyEnable = "KaomoCSEmulator_enable";
         public bool enable {
@@ -34,8 +35,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             }
         }
 
+        const string PrefsKeyFirstPersonPerspective = "KaomoCSEmulator_firstPersonPerspective";
+        public bool perspective
+        {
+            get => PlayerPrefs.GetInt(PrefsKeyFirstPersonPerspective, 1) == 1;
+            set
+            {
+                PlayerPrefs.SetInt(PrefsKeyFirstPersonPerspective, value ? 1 : 0);
+                OnChangedPerspective.Invoke();
+            }
+        }
+
         const string PrefsKeyVrm = "KaomoCSEmulator_vrm";
-        const string DefaultVrmPath = "Assets/KaomoLab/CSEmulator/VRM/CSEmulatorDummyHumanoid.prefab";
+        public const string DefaultVrmPath = "Assets/KaomoLab/CSEmulator/VRM/CSEmulatorDummyHumanoid.prefab";
         public GameObject vrm
         {
             get

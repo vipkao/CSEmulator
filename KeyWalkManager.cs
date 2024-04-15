@@ -8,14 +8,12 @@ namespace Assets.KaomoLab.CSEmulator
 {
     public class KeyWalkManager
     {
-        readonly Func<bool> IsForwardKeyDown;
-        readonly Func<bool> IsForwardKeyUp;
-        readonly Func<bool> IsBackKeyDown;
-        readonly Func<bool> IsBackKeyUp;
-        readonly Func<bool> IsRightKeyDown;
-        readonly Func<bool> IsRightKeyUp;
-        readonly Func<bool> IsLeftKeyDown;
-        readonly Func<bool> IsLeftKeyUp;
+        readonly IRawInput rawInput;
+
+        bool isForwardKeyPressed = false;
+        bool isBackKeyPressed = false;
+        bool isRightKeyPressed = false;
+        bool isLeftKeyPressed = false;
 
         int forwardForce = 0;
         int forwardDirection = 0;
@@ -23,21 +21,15 @@ namespace Assets.KaomoLab.CSEmulator
         int rightDirection = 0;
         int walkingSpeed = 0;
 
+        bool needRefresh = false;
+        bool isFaceConstraintForward = false;
+        bool needForceForward = false;
+
         public KeyWalkManager(
-            Func<bool> IsForwardKeyDown, Func<bool> IsForwardKeyUp,
-            Func<bool> IsBackKeyDown, Func<bool> IsBackKeyUp,
-            Func<bool> IsRightKeyDown, Func<bool> IsRightKeyUp,
-            Func<bool> IsLeftKeyDown, Func<bool> IsLeftKeyUp
+            IRawInput rawInput
         )
         {
-            this.IsForwardKeyDown = IsForwardKeyDown;
-            this.IsForwardKeyUp = IsForwardKeyUp;
-            this.IsBackKeyDown = IsBackKeyDown;
-            this.IsBackKeyUp = IsBackKeyUp;
-            this.IsRightKeyDown = IsRightKeyDown;
-            this.IsRightKeyUp = IsRightKeyUp;
-            this.IsLeftKeyDown = IsLeftKeyDown;
-            this.IsLeftKeyUp = IsLeftKeyUp;
+            this.rawInput = rawInput;
         }
 
         public void Update(
@@ -47,12 +39,13 @@ namespace Assets.KaomoLab.CSEmulator
         )
         {
             var changed = false;
-            ApplyWalkForce(IsForwardKeyDown, IsForwardKeyUp, 1, ref forwardForce, ref changed);
-            ApplyWalkForce(IsBackKeyDown, IsBackKeyUp, -1, ref forwardForce, ref changed);
-            ApplyWalkForce(IsRightKeyDown, IsRightKeyUp, 1, ref rightForce, ref changed);
-            ApplyWalkForce(IsLeftKeyDown, IsLeftKeyUp, -1, ref rightForce, ref changed);
-            if (changed)
+            ApplyWalkForce(rawInput.IsForwardKey, 1, ref isForwardKeyPressed, ref forwardForce, ref changed);
+            ApplyWalkForce(rawInput.IsBackKey,  -1, ref isBackKeyPressed, ref forwardForce, ref changed);
+            ApplyWalkForce(rawInput.IsRightKey, 1, ref isRightKeyPressed, ref rightForce, ref changed);
+            ApplyWalkForce(rawInput.IsLeftKey, -1, ref isLeftKeyPressed, ref rightForce, ref changed);
+            if (changed || needRefresh)
             {
+                needRefresh = false;
                 var toWalkingSpeed = forwardForce == 0 && rightForce == 0 ? 0 : 1;
                 if(walkingSpeed != toWalkingSpeed)
                 {
@@ -61,13 +54,24 @@ namespace Assets.KaomoLab.CSEmulator
                 }
 
                 var toForwardDirection = CalcDirection(forwardDirection, forwardForce, rightForce);
+                var toRightDirection = CalcDirection(rightDirection, rightForce, forwardForce);
+                if (isFaceConstraintForward && forwardForce == 0 && rightForce == 0)
+                {
+                    toForwardDirection = 1;
+                    toRightDirection = 0;
+                }
+                if (needForceForward)
+                {
+                    toForwardDirection = 1;
+                    toRightDirection = 0;
+                    needForceForward = false;
+                }
                 if (forwardDirection != toForwardDirection)
                 {
                     forwardDirection = toForwardDirection;
                     OnForwardDirectionChanged(forwardDirection);
                 }
 
-                var toRightDirection = CalcDirection(rightDirection, rightForce, forwardForce);
                 if (rightDirection != toRightDirection)
                 {
                     rightDirection = toRightDirection;
@@ -77,16 +81,18 @@ namespace Assets.KaomoLab.CSEmulator
         }
 
         void ApplyWalkForce(
-            Func<bool> IsKeyDown, Func<bool> IsKeyUp, int direction, ref int force, ref bool changed)
+            Func<bool> IsKey, int direction, ref bool isKeyPressed, ref int force, ref bool changed)
         {
-            if (IsKeyDown())
+            if (IsKey() && !isKeyPressed)
             {
                 force += direction;
+                isKeyPressed = true;
                 changed = true;
             }
-            if (IsKeyUp())
+            if (!IsKey() && isKeyPressed)
             {
-                force -= direction;
+                if (isKeyPressed) force -= direction;
+                isKeyPressed = false;
                 changed = true;
             }
         }
@@ -96,6 +102,34 @@ namespace Assets.KaomoLab.CSEmulator
             if (targetForce != 0) return targetForce;
             if (otherForce == 0) return targetDirection;
             return 0;
+        }
+
+        public void ConstraintFaceForward(bool isFaceConstraintForward)
+        {
+            this.isFaceConstraintForward = isFaceConstraintForward;
+            needRefresh = true;
+        }
+
+        public void ForceForward()
+        {
+            needForceForward = true;
+            needRefresh = true;
+        }
+
+        public int GetDirectionAngle()
+        {
+            if (forwardDirection ==  1 && rightDirection ==  0) return 45 * 0;
+            if (forwardDirection ==  1 && rightDirection ==  1) return 45 * 1;
+            if (forwardDirection ==  0 && rightDirection ==  1) return 45 * 2;
+            if (forwardDirection == -1 && rightDirection ==  1) return 45 * 3;
+            if (forwardDirection == -1 && rightDirection ==  0) return 45 * 4;
+            if (forwardDirection == -1 && rightDirection == -1) return 45 * 5;
+            if (forwardDirection ==  0 && rightDirection == -1) return 45 * 6;
+            if (forwardDirection ==  1 && rightDirection == -1) return 45 * 7;
+
+            //デフォルトの向きが定まったら不要
+            if (forwardDirection == 0 && rightDirection == 0) return 45 * 0;
+            throw new Exception("設計ミス。開発者に連絡してください。");
         }
     }
 }

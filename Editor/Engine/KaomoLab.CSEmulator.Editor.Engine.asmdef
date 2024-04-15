@@ -8,6 +8,7 @@
         "ClusterVR.CreatorKit.Editor.Preview.World",
         "ClusterVR.CreatorKit.Preview",
         "KaomoLab.CSEmulator",
+        "KaomoLab.CSEmulator.Implements",
         "KaomoLab.CSEmulator.Editor",
         "KaomoLab.CSEmulator.Editor.EmulateClasses",
         "KaomoLab.CSEmulator.Components",

@@ -10,12 +10,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     public class VrmPreparer
     {
         readonly GameObject vrm;
+        readonly Components.IPerspectiveChangeNotifier perspectiveChangeNotifier;
 
         public VrmPreparer(
-            GameObject vrm
+            GameObject vrm,
+            Components.IPerspectiveChangeNotifier perspectiveChangeNotifier
         )
         {
             this.vrm = vrm;
+            this.perspectiveChangeNotifier = perspectiveChangeNotifier;
         }
 
         public GameObject InstantiateVrm()
@@ -54,9 +57,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 "Assets/KaomoLab/CSEmulator/Components/Animations/Player.controller"
             );
             csPlayerController.Construct(
-                characterController,
+                new UnityCharacterController(characterController),
                 animationController,
-                cckPlayerGravityHolder
+                cckPlayerGravityHolder,
+                perspectiveChangeNotifier,
+                new Implements.UnityKeyInput()
             );
 
             //ポーズをA-Poseにする。アニメーション来たら多分不要。

@@ -77,13 +77,10 @@ namespace Assets.KaomoLab.CSEmulator
                     if (!muscles[i].HasValue) continue;
                     humanPose.muscles[i] = muscles[i].Value;
                 }
-                //musclesは残り続けるのでリセットしない
             }
 
             if (position != null) humanPose.bodyPosition = position.Value.Clone();
             if (rotation != null) humanPose.bodyRotation = rotation.Value.Clone();
-            position = null;
-            rotation = null;
 
             poseHandler.SetHumanPose(ref humanPose);
         }

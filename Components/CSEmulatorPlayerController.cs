@@ -18,14 +18,15 @@ namespace Assets.KaomoLab.CSEmulator.Components
         const string DIRECTION_FORWARD = "DirectionForward";
         const string DIRECTION_RIGHT = "DirectionRight";
 
-        public CharacterController characterController { get; private set; } = null;
+        public ICharacterController characterController { get; private set; } = null;
         public Vector3 velocity { get; private set; } = Vector3.zero;
         public float gravity { get; set; } = Commons.STANDARD_GRAVITY;
         bool isVelocityAdded = false;
 
         KeyWalkManager walkManager;
+        FaceConstraintManager faceConstraintManager;
 
-        public HumanPoseManager poseManager { get; private set; } = null; 
+        public HumanPoseManager poseManager { get; private set; } = null;
 
         public Animator animator
         {
@@ -42,25 +43,43 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
 
         IVelocityYHolder cckPlayerVelocityY;
+        IPerspectiveChangeNotifier perspectiveChangeNotifier;
+        IRawInput rawInput;
 
         public void Construct(
-            CharacterController characterController,
+            ICharacterController characterController,
             RuntimeAnimatorController animatorController,
-            IVelocityYHolder cckPlayerVelocityY
+            IVelocityYHolder cckPlayerVelocityY,
+            IPerspectiveChangeNotifier perspectiveChangeNotifier,
+            IRawInput rawInput
         )
         {
             this.characterController = characterController;
             this.cckPlayerVelocityY = cckPlayerVelocityY;
             this.animator.runtimeAnimatorController = animatorController;
             this.walkManager = new KeyWalkManager(
-                () => Input.GetKeyDown(KeyCode.W), () => Input.GetKeyUp(KeyCode.W),
-                () => Input.GetKeyDown(KeyCode.S), () => Input.GetKeyUp(KeyCode.S),
-                () => Input.GetKeyDown(KeyCode.D), () => Input.GetKeyUp(KeyCode.D),
-                () => Input.GetKeyDown(KeyCode.A), () => Input.GetKeyUp(KeyCode.A)
+                rawInput
             );
             this.poseManager = new HumanPoseManager(
                 animator
             );
+            this.faceConstraintManager = new FaceConstraintManager(
+                isFaceConstraintForward =>
+                {
+                    walkManager.ConstraintFaceForward(isFaceConstraintForward);
+                    animator.SetBool("IsFaceForward", isFaceConstraintForward);
+                    animator.SetTrigger("FaceConstraintChanged");
+                }
+            );
+            this.perspectiveChangeNotifier = perspectiveChangeNotifier;
+            perspectiveChangeNotifier.OnChanged += PerspectiveChangeNotifier_OnValueChanged;
+            perspectiveChangeNotifier.RequestNotify();
+            this.rawInput = rawInput;
+        }
+
+        private void PerspectiveChangeNotifier_OnValueChanged(bool data)
+        {
+            faceConstraintManager.ChangePerspective(data);
         }
 
         public void AddVelocity(Vector3 velocity)
@@ -132,6 +151,36 @@ namespace Assets.KaomoLab.CSEmulator.Components
                 rightDirection => animator.SetFloat(DIRECTION_RIGHT, rightDirection)
             );
 
+        }
+
+        public void ChangeGrabbing(bool isGrab)
+        {
+            faceConstraintManager.ChangeGrabbing(isGrab);
+        }
+        public void ChangePerspective(bool isFirstPerson)
+        {
+            faceConstraintManager.ChangePerspective(isFirstPerson);
+        }
+
+        public void ForceForward()
+        {
+            walkManager.ForceForward();
+        }
+
+        public Quaternion ApplyDirection(Quaternion source)
+        {
+            if (faceConstraintManager.isConstraintForward)
+            {
+                return source;
+            }
+            var d = walkManager.GetDirectionAngle();
+            var ret = source * Quaternion.Euler(0, d, 0);
+            return ret;
+        }
+
+        private void OnDestroy()
+        {
+            perspectiveChangeNotifier.OnChanged -= PerspectiveChangeNotifier_OnValueChanged;
         }
     }
 }

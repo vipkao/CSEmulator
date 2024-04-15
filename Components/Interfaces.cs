@@ -10,4 +10,14 @@ namespace Assets.KaomoLab.CSEmulator.Components
     {
         public float value { get; set; }
     }
+    public interface IPerspectiveChangeNotifier
+    {
+        event Handler<bool> OnChanged;
+        void RequestNotify();
+    }
+    public interface ICharacterController
+    {
+        public bool isGrounded { get; }
+        public void Move(UnityEngine.Vector3 motion);
+    }
 }

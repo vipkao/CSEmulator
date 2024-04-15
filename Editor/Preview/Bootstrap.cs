@@ -15,6 +15,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
     {
         public static EngineFacade engine = null;
         public static EmulatorOptions options = new EmulatorOptions();
+        public static OptionBridge optionBridge = new OptionBridge(options);
 
         static bool isInPlayMode = false;
 
@@ -79,7 +80,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             ShutdownCSEmulator();
             ApplyFpsLimit(); //念のため
             EditorApplication.update += OnUpdate;
-            engine = new EngineFacadeFactory(options).CreateDefault();
+            engine = new EngineFacadeFactory(optionBridge).CreateDefault();
             engine.Start();
         }
 

@@ -8,10 +8,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 {
     public class EngineFacadeFactory
     {
-        readonly EmulatorOptions options;
+        readonly OptionBridge options;
 
         public EngineFacadeFactory(
-            EmulatorOptions options
+            OptionBridge options
         )
         {
             this.options = options;
@@ -25,7 +25,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                     ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemCreator
                 ),
                 new Engine.VrmPreparer(
-                    options.vrm
+                    options.raw.vrm,
+                    options
                 )
             );
         }
@@ -37,9 +38,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         )
         {
             return new EngineFacade(
-                options,
                 itemCollector,
                 vrmPreparer,
+                options,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SpawnPointManager
             );

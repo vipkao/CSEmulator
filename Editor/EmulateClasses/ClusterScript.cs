@@ -490,10 +490,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             try
             {
                 //一旦右手＆オーナーの検出機能実装まで固定
+                var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
                 var owner = new PlayerHandle(
-                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    player,
                     csItemHandler
                 );
+                player.ChangeGrabbing(true);
                 OnGrabHandler(true, false, owner);
             }
             catch (Exception e)
@@ -508,10 +510,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             try
             {
                 //一旦右手＆オーナーの検出機能実装まで固定
+                var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
                 var owner = new PlayerHandle(
-                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    player,
                     csItemHandler
                 );
+                player.ChangeGrabbing(false);
                 OnGrabHandler(false, false, owner);
             }
             catch (Exception e)

@@ -9,8 +9,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 {
     public class EngineFacade
     {
-        readonly EmulatorOptions options;
-
         readonly ItemCollector itemCollector;
         readonly VrmPreparer vrmPreparer;
 
@@ -18,7 +16,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         readonly ItemMessageRouter itemMessageRouter;
         readonly PlayerHandlerStore playerHandleStore;
         readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
-
+        readonly OptionBridge optionBridge;
 
         List<CodeRunner> codeRunners = new List<CodeRunner>();
         UnityEngine.GameObject vrm = null;
@@ -26,14 +24,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         bool isRunning = false;
 
         public EngineFacade(
-            EmulatorOptions options,
             ItemCollector itemCollector,
             VrmPreparer vrmPreparer,
+            OptionBridge optionBridge,
             ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer,
             ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager
         )
         {
-            this.options = options;
+            this.optionBridge = optionBridge;
             this.itemCollector = itemCollector;
             this.vrmPreparer = vrmPreparer;
 
@@ -45,6 +43,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             playerControllerBridgeFactory = new PlayerControllerBridgeFactory(
                 spawnPointManager
             );
+            this.optionBridge = optionBridge;
 
             itemCollector.OnScriptableItemCreated += i =>
             {
@@ -67,7 +66,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public void Start()
         {
-            if (!options.enable) return;
+            if (!optionBridge.raw.enable) return;
 
             foreach(var i in itemCollector.GetAllItems())
             {
@@ -93,8 +92,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         )
         {
             var itemHandler = scriptableItem.Item.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
-            var loggerFactory = new DebugLogFactory(itemHandler.gameObject, options);
-            var runnerOptions = new OptionBridge(options);
+            var loggerFactory = new DebugLogFactory(itemHandler.gameObject, optionBridge.raw);
             var ret = new CodeRunner(
                 scriptableItem,
                 itemHandler,
@@ -102,7 +100,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 itemMessageRouter,
                 playerHandleStore,
                 playerControllerBridgeFactory,
-                runnerOptions,
+                optionBridge,
                 loggerFactory
             );
             ret.Start();
@@ -129,6 +127,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             codeRunners.Clear();
 
             isRunning = false;
+            vrm = null;
         }
     }
 }
