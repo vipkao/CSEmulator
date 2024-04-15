@@ -20,24 +20,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public string id => csPlayerHandler.id;
 
-        public Transform transform
-        {
-            get => playerController.transform;
-        }
+        public Transform transform => playerController.transform;
 
         //playerのswapn機能を追加して消去機能まで追加したらfalseにするようにする。
         public bool exists => true;
 
-        public Animator animator
-        {
-            get
-            {
-                if (_animator == null)
-                    _animator = csPlayerHandler.gameObject.GetComponent<Animator>();
-                return _animator;
-            }
-        }
-        Animator _animator = null;
+        public Animator animator => csPlayerHandler.animator;
 
         public GameObject vrm => csPlayerHandler.vrm;
 

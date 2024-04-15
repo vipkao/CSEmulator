@@ -374,7 +374,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             )
                 .Select(c => c.gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>())
                 .Where(h => h != null)
-                .Select(h => new PlayerHandle(playerControllerFactory.Create(h)))
+                .Select(h => new PlayerHandle(playerControllerFactory.Create(h), csItemHandler))
                 .ToArray();
 
             return handles;
@@ -482,7 +482,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             try
             {
                 //一旦右手＆オーナーの検出機能実装まで固定
-                var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                var owner = new PlayerHandle(
+                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    csItemHandler
+                );
                 OnGrabHandler(true, false, owner);
             }
             catch (Exception e)
@@ -497,7 +500,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             try
             {
                 //一旦右手＆オーナーの検出機能実装まで固定
-                var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                var owner = new PlayerHandle(
+                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    csItemHandler
+                );
                 OnGrabHandler(false, false, owner);
             }
             catch (Exception e)
@@ -522,7 +528,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             try
             {
-                var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                var owner = new PlayerHandle(
+                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    csItemHandler
+                );
                 OnInteractHandler(owner);
             }
             catch (Exception ex)
@@ -559,7 +568,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             try
             {
-                var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                var owner = new PlayerHandle(
+                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    csItemHandler
+                );
                 OnRideHandler(false, owner);
             }
             catch (Exception e)
@@ -571,7 +583,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             try
             {
-                var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                var owner = new PlayerHandle(
+                    playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    csItemHandler
+                );
                 OnRideHandler(true, owner);
             }
             catch (Exception e)
@@ -596,7 +611,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 try
                 {
-                    var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                    var owner = new PlayerHandle(
+                        playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                        csItemHandler
+                    );
                     OnUseHandler(true, owner);
                 }
                 catch (Exception ex)
@@ -608,7 +626,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 try
                 {
-                    var owner = new PlayerHandle(playerControllerFactory.Create(playerHandleHolder.GetOwner()));
+                    var owner = new PlayerHandle(
+                        playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                        csItemHandler
+                    );
                     OnUseHandler(false, owner);
                 }
                 catch (Exception ex)

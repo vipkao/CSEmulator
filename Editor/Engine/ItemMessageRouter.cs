@@ -67,6 +67,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 var (owner, receiver) = receivers[message.targetId];
                 //このタイミングでItemHandleがスクリプト空間を超えるので
                 //owner(スクリプト空間主＝$)が切り替わる。
+                //切り替わるタイミングで、過去ownerがhandleを保持している可能性はあるのでnewで作り直す。
                 var sender = new EmulateClasses.ItemHandle(
                     message.sender, //senderのItemHandleということ
                     owner,
@@ -78,6 +79,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                         h.csItemHandler,
                         owner,
                         this
+                    ),
+                    h => new EmulateClasses.PlayerHandle(
+                        h.playerController,
+                        owner
                     )
                 );
                 receiver.Invoke(message.requestName, arg, sender);

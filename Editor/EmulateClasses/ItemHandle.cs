@@ -15,6 +15,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         }
 
         public Components.CSEmulatorItemHandler csItemHandler { get; private set; }
+        //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly IMessageSender messageSender;
         readonly ClusterVR.CreatorKit.Item.Implements.MovableItem movableItem;
@@ -49,6 +50,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForce(EmulateVector3 force)
         {
+            CheckOwnerDistance();
+
             //AddInstantForceItemGimmickを参考にしている。
             if (movableItem == null)
             {
@@ -63,6 +66,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForceAt(EmulateVector3 impluse, EmulateVector3 position)
         {
+            CheckOwnerDistance();
+
             fixedUpdateQueue.Add(() =>
             {
                 movableItem.AddForceAtPosition(
@@ -75,6 +80,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveTorque(EmulateVector3 torque)
         {
+            CheckOwnerDistance();
+
             fixedUpdateQueue.Add(() =>
             {
                 movableItem.AddForce(torque._ToUnityEngine(), UnityEngine.ForceMode.Impulse);
@@ -89,6 +96,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void send(string requestName, object arg)
         {
+            CheckOwnerDistance();
+
             //CSETODO Sendableで例えば独自クラスなどを送った場合どうなるかの確認が必要。
             var sanitized = StateProxy.SanitizeSingleValue(arg);
             messageSender.send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
@@ -97,6 +106,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public override string ToString()
         {
             return string.Format("[ItemHandle][{0}][{1}]", csItemHandler.item.gameObject.name, id);
+        }
+
+        void CheckOwnerDistance()
+        {
+            var p1 = csItemHandler.gameObject.transform.position;
+            var p2 = csOwnerItemHandler.gameObject.transform.position;
+            var d = UnityEngine.Vector3.Distance(p1, p2);
+            //30メートル以内はOK
+            if (d <= 30f) return;
+
+            throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)) { distanceLimitExceeded = true };
         }
 
     }

@@ -37,7 +37,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public static object SanitizeSingleValue(
             object value,
-            Func<ItemHandle, ItemHandle> SanitizeItemHandle = null
+            Func<ItemHandle, ItemHandle> SanitizeItemHandle = null,
+            Func<PlayerHandle, PlayerHandle> SanitizeItemPlayerHandle = null
         )
         {
             if (value == null)
@@ -104,7 +105,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is PlayerHandle playerHandle)
             {
-                return playerHandle;
+                if (SanitizeItemPlayerHandle == null)
+                    return playerHandle;
+                return SanitizeItemPlayerHandle(playerHandle);
             }
             else if (value is System.Dynamic.ExpandoObject eo)
             {

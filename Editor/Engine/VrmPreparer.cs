@@ -49,7 +49,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var csPlayerController = characterController.gameObject.AddComponent<Components.CSEmulatorPlayerController>();
             csPlayerController.Construct(characterController);
 
+            //ポーズをA-Poseにする。アニメーション来たら多分不要。
+            ResetAPose(csPlayerHandler);
+
             return vrmInstance;
+        }
+
+        void ResetAPose(Components.CSEmulatorPlayerHandler csPlayerHandler)
+        {
+            var poseHandler = new HumanPoseHandler(
+                csPlayerHandler.animator.avatar,
+                csPlayerHandler.animator.transform
+            );
+            var humanPose = new HumanPose();
+            poseHandler.GetHumanPose(ref humanPose);
+            humanPose.muscles = EmulateClasses.Muscles.SPOSE.ToArray();
+            poseHandler.SetHumanPose(ref humanPose);
         }
 
     }

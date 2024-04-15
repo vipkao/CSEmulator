@@ -11,14 +11,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     {
         public string id => playerController.id;
 
-        readonly IPlayerController playerController;
+        public IPlayerController playerController { get; private set; }
+        //ownerの切り替えにはnewを強制しておきたいためprivate
+        readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly HumanPoseHandler poseHandler;
 
+        //csOwnerItemHandlerとはこのハンドルがいるスクリプト空間($)のこと。
         public PlayerHandle(
-            IPlayerController playerController
+            IPlayerController playerController,
+            Components.CSEmulatorItemHandler csOwnerItemHandler
         )
         {
             this.playerController = playerController;
+            this.csOwnerItemHandler = csOwnerItemHandler;
             poseHandler = new HumanPoseHandler(
                 playerController.animator.avatar,
                 playerController.animator.transform
@@ -28,6 +33,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addVelocity(EmulateVector3 velocity)
         {
+            CheckOwnerDistance();
+
             playerController.addVelocity(velocity._ToUnityEngine());
         }
 
@@ -40,7 +47,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
 
             var v = playerController.animator.GetBoneTransform((HumanBodyBones)bone);
             return new EmulateVector3(v.position);
@@ -50,7 +57,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
 
             var v = playerController.animator.GetBoneTransform((HumanBodyBones)bone);
             return new EmulateQuaternion(v.rotation);
@@ -60,7 +67,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
 
             var v = playerController.getPosition();
             return new EmulateVector3(v);
@@ -70,7 +77,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             if (!playerController.exists) return null;
 
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
 
             var q = playerController.getRotation();
             return new EmulateQuaternion(q);
@@ -78,7 +85,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void resetPlayerEffects()
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
             playerController.moveSpeedRate = 1;
             playerController.jumpSpeedRate = 1;
@@ -87,7 +95,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void respawn()
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
             playerController.Respawn();
         }
@@ -95,16 +104,39 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setGravity(float gravity)
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
             playerController.gravity = gravity;
+        }
+
+        //開発用
+        public HumanoidPose __getHumanoidPose()
+        {
+            var humanPose = new HumanPose();
+            poseHandler.GetHumanPose(ref humanPose);
+
+            var muscles = new Muscles();
+            for(var i = 0; i < humanPose.muscles.Length; i++)
+            {
+                muscles.Set(i, humanPose.muscles[i]);
+            }
+
+            var ret = new HumanoidPose(
+                new EmulateVector3(humanPose.bodyPosition),
+                new EmulateQuaternion(humanPose.bodyRotation),
+                muscles
+            );
+
+            return ret;
         }
 
         public void setHumanoidPose(
             HumanoidPose pose
         )
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
 
             var humanPose = new HumanPose();
@@ -114,7 +146,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 //ポーズリセット
                 humanPose.bodyPosition = new Vector3(0, 1, 0);
                 humanPose.bodyRotation = new Quaternion(0, 0, 0, 1);
-                humanPose.muscles = Muscles.TPOSE.ToArray();
+                humanPose.muscles = Muscles.SPOSE.ToArray();
                 poseHandler.SetHumanPose(ref humanPose);
                 return;
             }
@@ -140,14 +172,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setJumpSpeedRate(float jumpSpeedRate)
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
             playerController.jumpSpeedRate = jumpSpeedRate;
         }
 
         public void setMoveSpeedRate(float moveSpeedRate)
         {
-            //CSETODO 距離チェックどうする？
+            CheckOwnerDistance();
+
             //CSETODO 実行数チェックどうする？
             playerController.moveSpeedRate = moveSpeedRate;
         }
@@ -156,6 +190,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateVector3 position
         )
         {
+            CheckOwnerDistance();
+
             playerController.setPosition(position._ToUnityEngine());
         }
 
@@ -163,6 +199,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateQuaternion rotation
         )
         {
+            CheckOwnerDistance();
+
             //Ｙ軸回転(鉛直軸)のみ
             var r = rotation._ToUnityEngine().eulerAngles;
             var y = Quaternion.Euler(0, r.y, 0);
@@ -172,6 +210,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public override string ToString()
         {
             return string.Format("[PlayerHandle][{0}][{1}]", playerController.vrm.name, id);
+        }
+
+        void CheckOwnerDistance()
+        {
+            var p1 = playerController.getPosition();
+            var p2 = csOwnerItemHandler.gameObject.transform.position;
+            var d = UnityEngine.Vector3.Distance(p1, p2);
+            //30メートル以内はOK
+            if (d <= 30f) return;
+
+            throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[Player]", csOwnerItemHandler)) { distanceLimitExceeded = true };
         }
     }
 }

@@ -192,5 +192,10 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
             return (itemHandler, playerHandler);
         }
+
+        public override string ToString()
+        {
+            return String.Format("[Item][{0}][{1}]", gameObject.name, item.Id.ToString());
+        }
     }
 }

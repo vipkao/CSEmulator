@@ -29,7 +29,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         )
         {
             var itemHandler = csItemHandler == null ? null : new ItemHandle(csItemHandler, csItemOwnerHandler, messageSender);
-            var playerHandler = csPlayerHandler == null ? null : new PlayerHandle(olayerControllerFactory.Create(csPlayerHandler));
+            var playerHandler = csPlayerHandler == null ? null : new PlayerHandle(
+                olayerControllerFactory.Create(csPlayerHandler),
+                csItemOwnerHandler
+            );
             var hitObject = new HitObject(itemHandler, playerHandler);
             return hitObject;
         }
