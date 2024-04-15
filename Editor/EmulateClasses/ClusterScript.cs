@@ -40,6 +40,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         bool isInFixedUpdate = false;
 
         readonly BurstableThrottle createItemThrottle = new BurstableThrottle(0.09d, 5);
+        readonly BurstableThrottle callExternalThrottle = new BurstableThrottle(12.0d, 5);
 
         Action<Collision> OnCollideHandler = _ => { };
         Action<bool, bool, PlayerHandle> OnGrabHandler = (_, _, _) => { };
@@ -238,8 +239,36 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             string meta
         )
         {
-            //CSETODO 実行回数制限を調査して入れる
+            CheckCallExternalSizeLimit(request, meta);
+            CheckCallExternalOperationLimit();
+
             externalCaller.CallExternal(request, meta);
+        }
+        void CheckCallExternalSizeLimit(string request, string meta)
+        {
+            if (Encoding.UTF8.GetByteCount(request) > 1000)
+            {
+                throw itemExceptionFactory.CreateRequestSizeLimitExceeded(
+                    String.Format("[{0}][request]", gameObject.name)
+                );
+            }
+            if (Encoding.UTF8.GetByteCount(meta) > 100)
+            {
+                throw itemExceptionFactory.CreateRequestSizeLimitExceeded(
+                    String.Format("[{0}][meta]", gameObject.name)
+                );
+            }
+        }
+        void CheckCallExternalOperationLimit()
+        {
+            if (!externalCaller.needThrottling) return;
+
+            var result = callExternalThrottle.TryCharge();
+            if (result) return;
+
+            throw itemExceptionFactory.CreateRateLimitExceeded(
+                String.Format("[{0}]", gameObject.name)
+            );
         }
 
         public ItemHandle createItem(
@@ -714,6 +743,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public void DischargeOperateLimit(double time)
         {
             createItemThrottle.Discharge(time);
+            callExternalThrottle.Discharge(time);
         }
 
         public void Shutdown()

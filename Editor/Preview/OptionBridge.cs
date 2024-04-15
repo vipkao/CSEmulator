@@ -14,7 +14,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         EmulateClasses.IPlayerMeta
     {
         public bool isDebug => raw.debug;
-        public IUrlHolder urlHolder { get; private set; }
+        public IExternalCallerOptions externalCallerOptions { get; private set; }
 
         public EmulatorOptions raw { get; private set; }
 
@@ -24,11 +24,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public bool exists => raw.exists;
 
-        public class UrlHolder : IUrlHolder
+        public class ExternalCallerOptions : IExternalCallerOptions
         {
             readonly EmulatorOptions options;
-            public UrlHolder(EmulatorOptions options) => this.options = options;
+            public ExternalCallerOptions(EmulatorOptions options) => this.options = options;
             public string url => options.callExternalUrl;
+            public bool needThrottling => options.needExternalCallThrottling;
         }
 
         public OptionBridge(
@@ -36,7 +37,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         )
         {
             this.raw = options;
-            this.urlHolder = new UrlHolder(options);
+            this.externalCallerOptions = new ExternalCallerOptions(options);
             options.OnChangedPerspective += Options_OnChangedPerspective;
         }
 

@@ -11,10 +11,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     public class ExternalHttpCaller
         : EmulateClasses.IExternalCaller
     {
-        readonly IUrlHolder urlHolder;
+        readonly IExternalCallerOptions options;
         readonly ILogger logger;
 
         Action<string, string, string> Callback = (_, _, _) => { };
+
+        public bool needThrottling => options.needThrottling;
 
         [System.Serializable]
         public class Request
@@ -30,11 +32,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         }
 
         public ExternalHttpCaller(
-            IUrlHolder urlHolder,
+            IExternalCallerOptions options,
             ILogger logger
         )
         {
-            this.urlHolder = urlHolder;
+            this.options = options;
             this.logger = logger;
         }
 
@@ -42,14 +44,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         {
             using (var client = new HttpClient())
             {
-                //CSETODO 文字数制限入れる。
                 var requestJson = GetRequestJson(request);
                 var postData = new StringContent(requestJson, Encoding.UTF8, "application/json");
-                var result = await client.PostAsync(urlHolder.url, postData);
+                var result = await client.PostAsync(options.url, postData);
                 if (result.StatusCode != System.Net.HttpStatusCode.OK)
                 {
                     //CSETODO notfoundでどういうメッセージが帰ってくる？
-                    var reason = string.Format("{0}:{1}:{2}", result.StatusCode, result.ReasonPhrase, urlHolder.url);
+                    var reason = string.Format("{0}:{1}:{2}", result.StatusCode, result.ReasonPhrase, options.url);
                     Callback.Invoke(null, meta, reason);
                     logger.Error(reason);
                     return;

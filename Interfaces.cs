@@ -29,6 +29,7 @@ namespace Assets.KaomoLab.CSEmulator
     public interface IItemExceptionFactory
     {
         Exception CreateDistanceLimitExceeded(string message);
+        Exception CreateRequestSizeLimitExceeded(string message);
         Exception CreateRateLimitExceeded(string message);
         Exception CreateExecutionNotAllowed(string message);
         Exception CreateGeneral(string message);

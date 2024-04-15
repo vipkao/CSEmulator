@@ -72,9 +72,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
                     "userIdの形式ではありません。", MessageType.Warning
                 );
             }
+            if(op.userId == "")
+                op.userId = op.DefaultUserId;
             op.userName = EditorGUILayout.TextField(new GUIContent("　.userDisplayName", "\"PlayerHandle.userDisplayNameの値を指定できます。"), op.userName);
+            if (op.userName == "")
+                op.userName = op.DefaultUserName;
             EditorGUILayout.Separator();
+
             op.callExternalUrl = EditorGUILayout.TextField(new GUIContent("callExternal用URL"), op.callExternalUrl);
+            op.needExternalCallThrottling = EditorGUILayout.Toggle(new GUIContent("　実行回数制限を行う", "連続してテストしたい場合などでOFFにしてください。"), op.needExternalCallThrottling);
             EditorGUILayout.Separator();
 
             EditorGUILayout.LabelField("以下はプレビュー開始前に設定してください。");

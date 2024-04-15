@@ -13,9 +13,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
     [InitializeOnLoad]
     public static class Bootstrap
     {
+        const string TickerPrefab = "Assets/KaomoLab/CSEmulator/Editor/Preview/CSEmulatorTicker.prefab";
+
         public static EngineFacade engine = null;
         public static EmulatorOptions options = new EmulatorOptions();
         public static OptionBridge optionBridge = new OptionBridge(options);
+        public static GameObject ticker = null;
 
         static bool isInPlayMode = false;
 
@@ -79,14 +82,20 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         {
             ShutdownCSEmulator();
             ApplyFpsLimit(); //念のため
-            EditorApplication.update += OnUpdate;
             engine = new EngineFacadeFactory(optionBridge).CreateDefault();
             engine.Start();
+            ticker = GameObject.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(TickerPrefab));
+            ticker.GetComponent<CSEmulator.Components.CSEmulatorTicker>().OnUpdate += OnUpdate;
         }
 
         static void ShutdownCSEmulator()
         {
-            EditorApplication.update -= OnUpdate;
+            if (ticker != null)
+            {
+                ticker.GetComponent<CSEmulator.Components.CSEmulatorTicker>().OnUpdate -= OnUpdate;
+                GameObject.DestroyImmediate(ticker);
+            }
+            ticker = null;
             engine?.Shutdown();
             engine = null;
         }

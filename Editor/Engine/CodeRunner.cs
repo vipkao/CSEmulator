@@ -89,7 +89,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             csItemHandler.itemExceptionFactory = exceptionFactory;
 
             var externalHttpCaller = new ExternalHttpCaller(
-                options.urlHolder,
+                options.externalCallerOptions,
                 logger
             );
 
@@ -122,8 +122,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             SetClass<EmulateClasses.TextAlignment>(engine, "TextAlignment");
             SetClass<EmulateClasses.TextAnchor>(engine, "TextAnchor");
             SetClass<EmulateClasses.TextInputStatus>(engine, "TextInputStatus");
-            //CSETODO instanceof ClusterScriptErrorで反応しない。js上ではただのErrorになっている？
-            SetClass<Editor.ClusterScriptError>(engine, "ClusterScriptError");
+            engine.SetValue("ClusterScriptError", exceptionFactory.clusterScriptErrorConstructor);
 
             try
             {

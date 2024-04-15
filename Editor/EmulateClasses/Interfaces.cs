@@ -148,6 +148,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     }
     public interface IExternalCaller
     {
+        bool needThrottling { get; }
         void CallExternal(string request, string meta);
         void SetCallEndCallback(Action<string, string, string> Callback);
     }

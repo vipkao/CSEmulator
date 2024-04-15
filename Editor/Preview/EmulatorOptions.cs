@@ -66,16 +66,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         }
 
         const string PrefsKeyUserId = "KaomoCSEmulator_userId";
+        public readonly string DefaultUserId = new String(Enumerable.Repeat('a', 16).Select(c => (char)(c + (new System.Random().Next() % 26))).ToArray());
         public readonly Regex userIdPattern = new Regex(".*");
         public string userId
         {
-            get => PlayerPrefs.GetString(PrefsKeyUserId, "");
+            get => PlayerPrefs.GetString(PrefsKeyUserId, DefaultUserId);
             set => PlayerPrefs.SetString(PrefsKeyUserId, value);
         }
         const string PrefsKeyUserName = "KaomoCSEmulator_userName";
+        public readonly string DefaultUserName = "テストユーザー";
         public string userName
         {
-            get => PlayerPrefs.GetString(PrefsKeyUserName, "");
+            get => PlayerPrefs.GetString(PrefsKeyUserName, DefaultUserName);
             set => PlayerPrefs.SetString(PrefsKeyUserName, value);
         }
         const string PrefsKeyExists = "KaomoCSEmulator_exists";
@@ -90,6 +92,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         {
             get => PlayerPrefs.GetString(PrefsKeyCallExternalUrl, "");
             set => PlayerPrefs.SetString(PrefsKeyCallExternalUrl, value);
+        }
+        const string PrefsKeyNeedExternalCallThrottling = "KaomoCSEmulator_needExternalCallThrottling";
+        public bool needExternalCallThrottling
+        {
+            get => PlayerPrefs.GetInt(PrefsKeyNeedExternalCallThrottling, 0) == 1;
+            set => PlayerPrefs.SetInt(PrefsKeyNeedExternalCallThrottling, value ? 1 : 0);
         }
 
         const string PrefsKeyDebug = "KaomoCSEmulator_debug";

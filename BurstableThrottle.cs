@@ -56,7 +56,7 @@ namespace Assets.KaomoLab.CSEmulator
                 if (charges[tail] > 0)
                     break;
 
-                amount += -charges[tail];
+                amount = -charges[tail];
                 charges[tail] = 0;
                 tail++;
                 if (tail == burstLimit) tail = 0;

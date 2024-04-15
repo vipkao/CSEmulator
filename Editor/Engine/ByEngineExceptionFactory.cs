@@ -9,26 +9,34 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     public class ByEngineExceptionFactory
         : IItemExceptionFactory
     {
-        readonly Jint.Engine engine;
-        readonly Jint.Native.Error.ErrorConstructor clusterScriptErrorConstructor;
+        public readonly Jint.Native.Error.ErrorConstructor clusterScriptErrorConstructor;
 
         public ByEngineExceptionFactory(
             Jint.Engine engine
         )
         {
-            this.engine = engine;
+            clusterScriptErrorConstructor = CreateErrorConstructor(
+                nameof(ClusterScriptError),
+                engine,
+                GetPrototypeObject(engine.Realm.Intrinsics.Error),
+                intrinsics => GetPrototypeObject(clusterScriptErrorConstructor)
+            );
+        }
 
-            var prototypeObject = typeof(Jint.Native.Error.ErrorConstructor)
+        Jint.Native.Object.ObjectInstance GetPrototypeObject(Jint.Native.Error.ErrorConstructor source)
+        {
+            var property = typeof(Jint.Native.Error.ErrorConstructor)
                 .GetProperty("PrototypeObject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                .GetValue(engine.Realm.Intrinsics.Error);
-            Func<Jint.Runtime.Intrinsics, Jint.Native.Object.ObjectInstance> intrinsicDefaultProto = (intrinsics) =>
-            {
-                var ret = (Jint.Native.Object.ObjectInstance)typeof(Jint.Native.Error.ErrorConstructor)
-                    .GetField("PrototypeObject", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
-                    .GetValue(clusterScriptErrorConstructor);
-                return ret;
-            };
-            clusterScriptErrorConstructor = (Jint.Native.Error.ErrorConstructor)Activator.CreateInstance(
+                .GetValue(source);
+            return (Jint.Native.Object.ObjectInstance)property;
+        }
+        Jint.Native.Error.ErrorConstructor CreateErrorConstructor(
+            string name,
+            Jint.Engine engine,
+            Jint.Native.Object.ObjectInstance objectPrototype,
+            Func<Jint.Runtime.Intrinsics, Jint.Native.Object.ObjectInstance> intrinsicDefaultProto
+        ){
+            var ret = Activator.CreateInstance(
                 typeof(Jint.Native.Error.ErrorConstructor),
                 System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance,
                 null,
@@ -37,12 +45,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                     engine,
                     engine.Realm,
                     engine.Realm.Intrinsics.Error,
-                    prototypeObject,
-                    new Jint.Native.JsString("ClusterScriptError"),
+                    objectPrototype,
+                    new Jint.Native.JsString(name),
                     intrinsicDefaultProto
                 },
                 null
             );
+            return (Jint.Native.Error.ErrorConstructor)ret;
         }
 
         public Exception CreateDistanceLimitExceeded(string message)
@@ -70,9 +79,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
         }
 
+        public Exception CreateRequestSizeLimitExceeded(string message)
+        {
+            return new ClusterScriptError(clusterScriptErrorConstructor, "[RequestSizeLimitExceeded]" + message)
+            {
+                requestSizeLimitExceeded = true
+            };
+        }
+
         public Exception CreateGeneral(string message)
         {
             return new ClusterScriptError(clusterScriptErrorConstructor, message);
         }
+
     }
 }
