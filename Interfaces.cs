@@ -23,4 +23,15 @@ namespace Assets.KaomoLab.CSEmulator
     {
         string GetLineInfo();
     }
+    public interface IItemExceptionFactory
+    {
+        Exception CreateDistanceLimitExceeded(string message);
+        Exception CreateRateLimitExceeded(string message);
+        Exception CreateExecutionNotAllowed(string message);
+        Exception CreateGeneral(string message);
+    }
+    public interface ITicker
+    {
+        long Ticks();
+    }
 }

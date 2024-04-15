@@ -6,23 +6,22 @@ using System.Threading.Tasks;
 
 namespace Assets.KaomoLab.CSEmulator.Editor
 {
-    //CSETODO JS内でキャッチできるようになったけども色々雑なのでなんとかする。
     public class ClusterScriptError : Jint.Runtime.JavaScriptException
     {
         public bool distanceLimitExceeded;
         public bool executionNotAllowed;
-        public string message;
-        public string name;
         public bool rateLimitExceeded;
         public bool requestSizeLimitExceeded;
-        public string stack;
+        public string message => this.Message;
+        public string name => GetType().Name;
+        public string stack => base.JavaScriptStackTrace;
 
-        public ClusterScriptError(string message)
-            : base(message)
+        public ClusterScriptError(
+            Jint.Native.Error.ErrorConstructor errorConstructor,
+            string message
+        )
+            : base(errorConstructor, message)
         {
-            this.message = message;
-            stack = base.StackTrace;
-            name = base.GetType().Name;
         }
     }
 }

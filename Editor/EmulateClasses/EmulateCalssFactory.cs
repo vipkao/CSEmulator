@@ -45,12 +45,5 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 logger
             );
         }
-
-        public StateProxy CreateDefaultStateProxy(
-        )
-        {
-            return new StateProxy(
-            );
-        }
     }
 }

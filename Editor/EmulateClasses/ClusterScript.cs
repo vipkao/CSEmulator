@@ -180,7 +180,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             set
             {
                 if (isGrab) return;
-                if (!hasMovableItem) throw new ClusterScriptError("Need MovableItem.");
+                if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.angularVelocity = value._ToUnityEngine();
             }
         }
@@ -200,8 +200,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             set
             {
-                if (!hasMovableItem) throw new ClusterScriptError("Need MovableItem.");
-                if (movableItem.Rigidbody.isKinematic) throw new ClusterScriptError("Need not Kinematic.");
+                if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
+                if (movableItem.Rigidbody.isKinematic) throw csItemHandler.itemExceptionFactory.CreateGeneral("非Kinematicにしてください。");
                 movableItem.Rigidbody.useGravity = value;
             }
         }
@@ -216,7 +216,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             set
             {
                 if (isGrab) return;
-                if (!hasMovableItem) throw new ClusterScriptError("Need MovableItem.");
+                if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.velocity = value._ToUnityEngine();
             }
         }
@@ -224,19 +224,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public void addForce(EmulateVector3 force)
         {
             if (!isInFixedUpdate)
-                throw new ClusterScriptError("onPhysicsUpdate内でのみ実行可能") {
-                    executionNotAllowed = true
-                };
+                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddForce(force._ToUnityEngine(), ForceMode.Force);
         }
 
         public void addForceAt(EmulateVector3 force, EmulateVector3 position)
         {
             if (!isInFixedUpdate)
-                throw new ClusterScriptError("onPhysicsUpdate内でのみ実行可能")
-                {
-                    executionNotAllowed = true
-                };
+                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddForceAtPosition(
                 force._ToUnityEngine(), position._ToUnityEngine(), ForceMode.Force
             );
@@ -266,10 +261,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public void addTorque(EmulateVector3 torque)
         {
             if (!isInFixedUpdate)
-                throw new ClusterScriptError("onPhysicsUpdate内でのみ実行可能")
-                {
-                    executionNotAllowed = true
-                };
+                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddTorque(
                 torque._ToUnityEngine(), ForceMode.Force
             );
@@ -322,9 +314,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public void destroy()
         {
             if (!csItemHandler.isCreatedItem)
-                throw new ClusterScriptError("動的アイテムのみ") {
-                    executionNotAllowed = true
-                };
+                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("動的アイテムのみ実行可能です。");
             itemDestroyer.Destroy(item);
         }
 
@@ -969,6 +959,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     );
                 default: throw new NotImplementedException();
             }
+        }
+
+        public void Shutdown()
+        {
+            updateListenerBinder.DeleteUpdateCallback(gameObject.name);
+            fixedUpdateListenerBinder.DeleteUpdateCallback(gameObject.name);
+            receiveListenerBinder.DeleteReceiveCallback(this.csItemHandler);
         }
 
         public override string ToString()

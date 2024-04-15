@@ -109,7 +109,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public void Update()
         {
-            foreach (var runner in codeRunners)
+            //Update中にDestroyされて減ることがあるのでToArray
+            foreach (var runner in codeRunners.ToArray())
             {
                 runner.Update();
             }

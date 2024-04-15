@@ -212,14 +212,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //30メートル以内はOK
             if (d <= 30f) return;
 
-            throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[Player]", csOwnerItemHandler)) { distanceLimitExceeded = true };
+            throw csOwnerItemHandler.itemExceptionFactory.CreateDistanceLimitExceeded(
+                String.Format("[{0}]>>>[Player]", csOwnerItemHandler)
+            );
         }
         void CheckOwnerOperationLimit()
         {
             var result = csOwnerItemHandler.TryPlayerOperate();
             if (result) return;
 
-            throw new ClusterScriptError(String.Format("rateLimitExceeded[{0}]>>>[Player]", csOwnerItemHandler)) { rateLimitExceeded = true };
+            throw csOwnerItemHandler.itemExceptionFactory.CreateRateLimitExceeded(
+                String.Format("[{0}]>>>[Player]", csOwnerItemHandler)
+            );
         }
     }
 }

@@ -36,6 +36,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly Dictionary<ulong, (Components.CSEmulatorItemHandler owner, Action<string, object, EmulateClasses.ItemHandle>)> receivers = new Dictionary<ulong, (Components.CSEmulatorItemHandler, Action<string, object, EmulateClasses.ItemHandle>)>();
         readonly List<Message> queue = new List<Message>();
 
+        public ITicker ticker = new Implements.DateTimeTicks();
+
         public ItemMessageRouter()
         {
         }
@@ -48,14 +50,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         )
         {
             //ディレイがある方がよさそう？0.1秒後に通知。
-            var tick = DateTime.Now.Ticks + 1_000_000;
+            var tick = ticker.Ticks() + 1_000_000;
             var message = new Message(tick, id, requestName, arg, sender);
             queue.Add(message);
         }
 
         public void Routing()
         {
-            var now = DateTime.Now.Ticks;
+            var now = ticker.Ticks();
             //途中で削除するのでToArray
             foreach(var message in queue.ToArray())
             {
@@ -92,6 +94,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         public void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, object, EmulateClasses.ItemHandle> Callback)
         {
             receivers.Add(owner.item.Id.Value, (owner, Callback));
+        }
+
+        public void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner)
+        {
+            if (!receivers.ContainsKey(owner.item.Id.Value)) return;
+            receivers.Remove(owner.item.Id.Value);
         }
     }
 }

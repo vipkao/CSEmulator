@@ -22,7 +22,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly IRunnerOptions options;
         readonly ILoggerFactory loggerFactory;
 
-        Jint.Engine engine;
+        List<Action> shutdownActions = new List<Action>();
+        bool isRunning = false;
 
         public CodeRunner(
             ClusterVR.CreatorKit.Item.IScriptableItem scriptableItem,
@@ -54,25 +55,33 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             emulateClassFactory = new EmulateClasses.EmulateClassFactory();
 
-            stateProxy = emulateClassFactory.CreateDefaultStateProxy();
+            stateProxy = new EmulateClasses.StateProxy();
 
         }
 
         public void Start()
         {
             csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
+            shutdownActions.Add(() => csItemHandler.OnFixedUpdate -= CsItemHandler_OnFixedUpdate);
+
             onUpdateBridge.SetLateUpdateCallback(
                 csItemHandler.gameObject.name + "_throttle",
                 csItemHandler.gameObject,
                 CsItemHandler_ThrottleUpdate
             );
+            shutdownActions.Add(() => onUpdateBridge.DeleteLateUpdateCallback(
+                csItemHandler.gameObject.name + "_throttle"
+            ));
 
             var engineOptions = new Jint.Options();
             if(options.isDebug)
                 engineOptions.Debugger.Enabled = true;
-            engine = new Jint.Engine(engineOptions);
+            var engine = new Jint.Engine(engineOptions);
+            shutdownActions.Add(() => engine.Dispose());
 
             var logger = loggerFactory.Create(new JintProgramStatus(engine));
+            var exceptionFactory = new ByEngineExceptionFactory(engine);
+            csItemHandler.itemExceptionFactory = exceptionFactory;
 
             var clusterScript = emulateClassFactory.CreateDefaultClusterScript(
                 gameObject,
@@ -86,6 +95,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 stateProxy,
                 logger
             );
+            shutdownActions.Add(() => clusterScript.Shutdown());
 
             engine.SetValue("$", clusterScript);
             SetClass<EmulateClasses.EmulateVector2>(engine, "Vector2");
@@ -104,6 +114,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             {
                 Commons.ExceptionLogger(e, gameObject);
             }
+
+            isRunning = true;
+            shutdownActions.Add(() => isRunning = false);
         }
         private void CsItemHandler_OnFixedUpdate()
         {
@@ -132,6 +145,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
         public void Update()
         {
+            if (!isRunning) return;
             onUpdateBridge.InvokeUpdate();
         }
 
@@ -144,11 +158,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
         public void Shutdown()
         {
-            csItemHandler.OnFixedUpdate -= CsItemHandler_OnFixedUpdate;
-            onUpdateBridge.DeleteLateUpdateCallback(
-                csItemHandler.gameObject.name + "_throttle"
-            );
-            engine.Dispose();
+            foreach(var Action in shutdownActions)
+            {
+                Action();
+            }
         }
     }
 }

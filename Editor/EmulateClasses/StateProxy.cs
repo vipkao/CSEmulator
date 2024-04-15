@@ -76,14 +76,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             else if (value is Delegate)
             {
-                UnityEngine.Debug.LogWarning("state dose not accept Function.");
-                throw new ClusterScriptError("state dose not accept Function.");
+                //CSETODO 実際は少し違う
+                return new object();
             }
             else if (value is DateTime)
             {
-                //DateTimeつまりsignalの値を入れようとした場合は無視される
-                UnityEngine.Debug.LogWarning("state dose not accept *signal* value. use *double* value.");
-                return Jint.Native.JsValue.Undefined;
+                return new object();
             }
             else if (value is EmulateVector2 vector2)
             {
@@ -118,9 +116,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 return eo;
             }
 
-            var message = String.Format("state dose not accept [{0}].", value.GetType().Name);
-            UnityEngine.Debug.LogWarning(message);
-            throw new ClusterScriptError(message);
+            //CSETODO 実際は少し違う
+            return new object();
         }
     }
 }

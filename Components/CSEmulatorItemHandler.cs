@@ -22,13 +22,25 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         public bool isCreatedItem { get; private set; } = false;
 
+        public string gameObjectName { get; private set; } = "";
+
         //検証の結果…
         //・制限はitemとplayerで分かれている模様。
         //・ロジックやパラメータもおおよそこんな感じ。
         readonly BurstableThrottle itemThrottle = new BurstableThrottle(0.09d, 5);
+        readonly BurstableThrottle sendThrottle = new BurstableThrottle(0.09d, 5);
         readonly BurstableThrottle playerhrottle = new BurstableThrottle(0.09d, 5);
 
         OverlapManager<CSEmulatorItemHandler, CSEmulatorPlayerHandler> overlapManager;
+
+        //実装上は妥当だとは思うけど、権能上は妥当ではないように思える。
+        //CSETODO しかも設定するタイミングがContructでは行えないという気持ち悪さ。
+        //そもそもの設計に無理がある？Constructで一発でできるというのが幻想？
+        //＞itemExceptionFactoryという名前にしたところ、
+        //＞この例外はitemに依存しているという意味が加わった気がする。
+        //＞そうすると、ここにこの機能を持たせてもいい気がしてきた。
+        //＞依然として、Constructで設定できない気持ち悪さはあるけども。
+        public IItemExceptionFactory itemExceptionFactory = null;
 
         public void Construct(
             bool isCreatedItem
@@ -46,8 +58,15 @@ namespace Assets.KaomoLab.CSEmulator.Components
             }
 
             overlapManager = new OverlapManager<CSEmulatorItemHandler, CSEmulatorPlayerHandler>(gameObject);
+
+            gameObjectName = gameObject.name;
         }
 
+        public bool Exists()
+        {
+            //「ロード中でもtrueを返すことがあります。」という記述が気になるけど、いったんこれで。
+            return item.Id.IsValid() && !item.IsDestroyed;
+        }
 
         public (string, CSEmulatorItemHandler, CSEmulatorPlayerHandler)[] GetOverlaps()
         {
@@ -58,6 +77,10 @@ namespace Assets.KaomoLab.CSEmulator.Components
         {
             return itemThrottle.TryCharge();
         }
+        public bool TrySendOperate()
+        {
+            return sendThrottle.TryCharge();
+        }
         public bool TryPlayerOperate()
         {
             return playerhrottle.TryCharge();
@@ -66,6 +89,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         public void DischargeOperateLimit(double time)
         {
             itemThrottle.Discharge(time);
+            sendThrottle.Discharge(time);
             playerhrottle.Discharge(time);
         }
 

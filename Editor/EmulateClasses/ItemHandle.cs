@@ -18,7 +18,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly IMessageSender messageSender;
-        readonly ClusterVR.CreatorKit.Item.Implements.MovableItem movableItem;
+        readonly ClusterVR.CreatorKit.Item.IMovableItem movableItem;
 
         readonly List<Action> fixedUpdateQueue = new List<Action>();
 
@@ -30,7 +30,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         )
         {
             this.csItemHandler = csItemHandler;
-            movableItem = csItemHandler.gameObject.GetComponent<ClusterVR.CreatorKit.Item.Implements.MovableItem>();
+            //CSETODO 将来的にスクリプト実行オーナーの概念をCSEmulatorItemHandlerから分離させたときに
+            //canMove()といった関数でチェックさせるようにする。
+            //この修正はそれまでの仮対応。
+            if (csItemHandler.Exists())
+                movableItem = csItemHandler.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IMovableItem>();
+            else
+                movableItem = null;
 
             this.csOwnerItemHandler = csOwnerItemHandler;
 
@@ -41,7 +47,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         private void CsItemHandler_OnFixedUpdate()
         {
-            foreach(var Action in fixedUpdateQueue)
+            if (!csItemHandler.Exists()) return;
+            foreach (var Action in fixedUpdateQueue)
             {
                 Action();
             }
@@ -50,6 +57,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForce(EmulateVector3 force)
         {
+            if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
@@ -67,6 +75,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForceAt(EmulateVector3 impluse, EmulateVector3 position)
         {
+            if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
@@ -82,6 +91,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveTorque(EmulateVector3 torque)
         {
+            //CSETODO 単にreturnではなく親切にメッセージを出したい。
+            if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
+            if (!exists()) return;
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
@@ -93,13 +105,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public bool exists()
         {
-            //「ロード中でもtrueを返すことがあります。」という記述が気になるけど、いったんこれで。
-            return csItemHandler.item.Id.IsValid() && !csItemHandler.item.IsDestroyed;
+            return csItemHandler.Exists();
         }
 
         public void send(string requestName, object arg)
         {
-            CheckOwnerOperationLimit();
+            //CSETODO 単にreturnではなく親切にメッセージを出したい。
+            if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
+            CheckOwnerSendOperationLimit();
             CheckOwnerDistanceLimit();
 
             //CSETODO Sendableで例えば独自クラスなどを送った場合どうなるかの確認が必要。
@@ -109,7 +122,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public override string ToString()
         {
-            return string.Format("[ItemHandle][{0}][{1}]", csItemHandler.item.gameObject.name, id);
+            return string.Format("[ItemHandle][{0}][{1}]", csItemHandler.gameObjectName, id);
         }
 
         void CheckOwnerDistanceLimit()
@@ -120,14 +133,27 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //30メートル以内はOK
             if (d <= 30f) return;
 
-            throw new ClusterScriptError(String.Format("distanceLimitExceeded[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)) { distanceLimitExceeded = true };
+            throw csOwnerItemHandler.itemExceptionFactory.CreateDistanceLimitExceeded(
+                String.Format("[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)
+            );
         }
         void CheckOwnerOperationLimit()
         {
             var result = csOwnerItemHandler.TryItemOperate();
             if (result) return;
 
-            throw new ClusterScriptError(String.Format("rateLimitExceeded[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)) { rateLimitExceeded = true };
+            throw csOwnerItemHandler.itemExceptionFactory.CreateRateLimitExceeded(
+                String.Format("[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)
+            );
+        }
+        void CheckOwnerSendOperationLimit()
+        {
+            var result = csOwnerItemHandler.TrySendOperate();
+            if (result) return;
+
+            throw csOwnerItemHandler.itemExceptionFactory.CreateRateLimitExceeded(
+                String.Format("[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)
+            );
         }
     }
 }

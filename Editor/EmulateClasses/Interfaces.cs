@@ -17,6 +17,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     public interface IReceiveListenerBinder
     {
         void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, object, ItemHandle> Callback);
+        void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner);
     }
 
     public interface IMessageSender

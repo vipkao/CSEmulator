@@ -2,6 +2,7 @@
     "name": "KaomoLab.CSEmulator",
     "rootNamespace": "",
     "references": [
+        "ClusterVR.CreatorKit.Item",
         "ClusterVR.CreatorKit.Item.Implements"
     ],
     "includePlatforms": [],
