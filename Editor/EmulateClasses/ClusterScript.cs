@@ -6,6 +6,9 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 using ClusterVR.CreatorKit;
+using UnityEditor;
+using UnityEngine.UIElements;
+using Assets.KaomoLab.CSEmulator.Components;
 
 namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
@@ -22,11 +25,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IUpdateListenerBinder fixedUpdateListenerBinder;
         readonly IReceiveListenerBinder receiveListenerBinder;
         readonly IMessageSender messageSender;
+        readonly ITextInputListenerBinder textInputListenerBinder;
+        readonly ITextInputSender textInputSender;
         readonly IPrefabItemHolder prefabItemHolder;
         readonly IPlayerHandleHolder playerHandleHolder;
         readonly IPlayerControllerFactory playerControllerFactory;
         readonly IProgramStatus programStatus;
         readonly IItemExceptionFactory itemExceptionFactory;
+        readonly IUserInterfaceHandler userInterfaceHandler;
+        readonly ICodeEvaluater codeEvaluater;
         readonly StateProxy stateProxy;
         readonly ILogger logger;
 
@@ -50,6 +57,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         Action<PlayerHandle> OnInteractHandler = _ => { };
         Action<bool, PlayerHandle> OnRideHandler = (_, _) => { };
         Action<bool, PlayerHandle> OnUseHandler = (_, _) => { };
+        Action<string, string, TextInputStatus> OnTextInputHandler = (_, _, _) => { };
 
         Action OnInteractInitialize = () => { };
 
@@ -64,10 +72,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IUpdateListenerBinder fixedUpdateListenerBinder,
             IReceiveListenerBinder receiveListenerBinder,
             IMessageSender messageSender,
+            ITextInputListenerBinder textInputListenerBinder,
+            ITextInputSender textInputSender,
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
             IItemExceptionFactory itemExceptionFactory,
+            IUserInterfaceHandler userInterfaceHandler,
+            ICodeEvaluater codeEvaluater,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -85,10 +97,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.fixedUpdateListenerBinder = fixedUpdateListenerBinder;
             this.receiveListenerBinder = receiveListenerBinder;
             this.messageSender = messageSender;
+            this.textInputListenerBinder = textInputListenerBinder;
+            this.textInputSender = textInputSender;
             this.prefabItemHolder = prefabItemHolder;
             this.playerHandleHolder = playerHandleHolder;
             this.playerControllerFactory = playerControllerFactory;
             this.itemExceptionFactory = itemExceptionFactory;
+            this.userInterfaceHandler = userInterfaceHandler;
+            this.codeEvaluater = codeEvaluater;
             this.stateProxy = stateProxy;
             this.logger = logger;
 
@@ -187,6 +203,31 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 if (isGrab) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.angularVelocity = value._ToUnityEngine();
+            }
+        }
+
+        public string id
+        {
+            get => csItemHandler.id;
+        }
+
+        public ItemHandle itemHandle
+        {
+            //cacheしてもいいかもしれないけど、
+            //都度newするという想定から外れるとロクなことが起きないのでnewしている。
+            get => new ItemHandle(csItemHandler, this.csItemHandler, messageSender);
+        }
+
+        public ItemTemplateId ItemTemplateId
+        {
+            get
+            {
+                var prefabItem = gameObject.GetComponent<CSEmulatorPrefabItem>();
+
+                //CSETODO nullでいい？エラーになる？
+                if (prefabItem == null) return null;
+
+                return new ItemTemplateId(prefabItem.id);
             }
         }
 
@@ -352,6 +393,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return allow;
         }
 
+        //CSETODO 仮実装
+        public void eval(string code)
+        {
+            codeEvaluater.Evaluate(code);
+        }
+
         public ItemHandle[] getItemsNear(EmulateVector3 position, float radius)
         {
             var handles = Physics.OverlapSphere(
@@ -386,7 +433,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var overlaps = csItemHandler.GetOverlaps()
                 .Select(o =>
                 {
-                    var hitObject = HitObject.Create(o.Item2, this.csItemHandler, o.Item3, playerControllerFactory, messageSender);
+                    var hitObject = HitObject.Create(
+                        o.Item2, this.csItemHandler, o.Item3,
+                        playerControllerFactory,
+                        userInterfaceHandler, textInputSender, messageSender
+                    );
                     object selfNode = o.Item1 == "" ? this : subNode(o.Item1);
                     var ret = new Overlap(hitObject, selfNode);
                     return ret;
@@ -403,7 +454,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             )
                 .Select(c => c.gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>())
                 .Where(h => h != null)
-                .Select(h => new PlayerHandle(playerControllerFactory.Create(h), csItemHandler))
+                .Select(h => new PlayerHandle(
+                    playerControllerFactory.Create(h), userInterfaceHandler, textInputSender, csItemHandler
+                ))
                 .ToArray();
 
             return handles;
@@ -526,6 +579,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
                 var owner = new PlayerHandle(
                     player,
+                    userInterfaceHandler,
+                    textInputSender,
                     csItemHandler
                 );
                 player.ChangeGrabbing(true);
@@ -546,6 +601,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 var player = playerControllerFactory.Create(playerHandleHolder.GetOwner());
                 var owner = new PlayerHandle(
                     player,
+                    userInterfaceHandler,
+                    textInputSender,
                     csItemHandler
                 );
                 player.ChangeGrabbing(false);
@@ -575,6 +632,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 var owner = new PlayerHandle(
                     playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    userInterfaceHandler,
+                    textInputSender,
                     csItemHandler
                 );
                 OnInteractHandler(owner);
@@ -615,6 +674,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 var owner = new PlayerHandle(
                     playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    userInterfaceHandler,
+                    textInputSender,
                     csItemHandler
                 );
                 OnRideHandler(false, owner);
@@ -630,6 +691,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 var owner = new PlayerHandle(
                     playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                    userInterfaceHandler,
+                    textInputSender,
                     csItemHandler
                 );
                 OnRideHandler(true, owner);
@@ -638,6 +701,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 Commons.ExceptionLogger(e, gameObject);
             }
+        }
+
+        public void onTextInput(Action<string, string, TextInputStatus> Callback)
+        {
+            textInputListenerBinder.SetReceiveCallback(this.csItemHandler, Callback);
         }
 
         public void onUpdate(Action<double> Callback)
@@ -658,6 +726,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 {
                     var owner = new PlayerHandle(
                         playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                        userInterfaceHandler,
+                        textInputSender,
                         csItemHandler
                     );
                     OnUseHandler(true, owner);
@@ -673,6 +743,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 {
                     var owner = new PlayerHandle(
                         playerControllerFactory.Create(playerHandleHolder.GetOwner()),
+                        userInterfaceHandler,
+                        textInputSender,
                         csItemHandler
                     );
                     OnUseHandler(false, owner);
@@ -745,7 +817,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //DesktopPlayerControllerにhitするのでchild
             var csPlayerHandler = gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>();
             var hitObject = HitObject.Create(
-                csItemHandler, this.csItemHandler, csPlayerHandler, playerControllerFactory ,messageSender
+                csItemHandler, this.csItemHandler, csPlayerHandler,
+                playerControllerFactory,
+                userInterfaceHandler, textInputSender, messageSender
             );
 
             return hitObject;
@@ -849,13 +923,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //logicExecutor.Execute(setStateLogic, itemId);
         }
 
-
         public SubNode subNode(string subNodeName)
         {
             var child = FindChild(gameObject.transform, subNodeName);
             if (child == null)
+            {
                 logger.Warning(String.Format("subNode:[{0}] is null.", subNodeName));
-            var ret = new SubNode(child, item, updateListenerBinder);
+                return null;
+            }
+            var textView = child.gameObject.GetComponent<ClusterVR.CreatorKit.World.ITextView>();
+            var ret = new SubNode(
+                child, item, textView, updateListenerBinder
+            );
             return ret;
         }
 
@@ -1015,6 +1094,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             updateListenerBinder.DeleteUpdateCallback(gameObject.name);
             fixedUpdateListenerBinder.DeleteUpdateCallback(gameObject.name);
             receiveListenerBinder.DeleteReceiveCallback(this.csItemHandler);
+            textInputListenerBinder.DeleteReceiveCallback(this.csItemHandler);
         }
 
         public object toJSON(string key)

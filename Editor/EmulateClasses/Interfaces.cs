@@ -74,4 +74,26 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void ChangePerspective(bool isFirstPerson);
     }
 
+    public interface IUserInterfaceHandler
+    {
+        bool isTextInputting { get; }
+        void StartTextInput(string caption, Action<string> SendCallback, Action CancelCallback, Action BusyCallback);
+    }
+
+    public interface ITextInputListenerBinder
+    {
+        void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, string, TextInputStatus> Callback);
+        void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner);
+    }
+
+    public interface ITextInputSender
+    {
+        void Send(ulong id, string text, string meta, TextInputStatus status);
+    }
+
+    public interface ICodeEvaluater
+    {
+        void Evaluate(string code);
+    }
+
 }

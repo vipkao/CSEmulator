@@ -20,10 +20,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IUpdateListenerBinder fixedUpdateListenerBinder,
             IReceiveListenerBinder receiveListenerBinder,
             IMessageSender messageSender,
+            ITextInputListenerBinder textInputListenerBinder,
+            ITextInputSender textInputSender,
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
             IItemExceptionFactory itemExceptionFactory,
+            IUserInterfaceHandler userInterfaceHandler,
+            ICodeEvaluater codeEvaluater,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -39,10 +43,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 fixedUpdateListenerBinder,
                 receiveListenerBinder,
                 messageSender,
+                textInputListenerBinder,
+                textInputSender,
                 prefabItemHolder,
                 playerHandleHolder,
                 playerControllerFactory,
                 itemExceptionFactory,
+                userInterfaceHandler,
+                codeEvaluater,
                 stateProxy,
                 logger
             );

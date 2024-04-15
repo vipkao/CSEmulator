@@ -11,7 +11,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public string id
         {
-            get => csItemHandler.item.Id.ToString();
+            get => csItemHandler.id;
         }
 
         public Components.CSEmulatorItemHandler csItemHandler { get; private set; }
@@ -19,8 +19,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly IMessageSender messageSender;
         readonly ClusterVR.CreatorKit.Item.IMovableItem movableItem;
-
-        readonly List<Action> fixedUpdateQueue = new List<Action>();
 
         //csOwnerItemHandlerとはこのハンドルがいるスクリプト空間($)のこと。
         public ItemHandle(
@@ -42,17 +40,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             this.messageSender = messageSender;
 
-            csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
-        }
-
-        private void CsItemHandler_OnFixedUpdate()
-        {
-            if (!csItemHandler.Exists()) return;
-            foreach (var Action in fixedUpdateQueue)
-            {
-                Action();
-            }
-            fixedUpdateQueue.Clear();
+            //おそらくメモリーリークの原因になるのでNG
+            //csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
         }
 
         public void addImpulsiveForce(EmulateVector3 force)
@@ -67,7 +56,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 UnityEngine.Debug.LogWarning("Need MovableItem");
                 return;
             }
-            fixedUpdateQueue.Add(() =>
+            csItemHandler.AddFixedUpdateAction(() =>
             {
                 movableItem.AddForce(force._ToUnityEngine(), UnityEngine.ForceMode.Impulse);
             });
@@ -79,7 +68,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
-            fixedUpdateQueue.Add(() =>
+            csItemHandler.AddFixedUpdateAction(() =>
             {
                 movableItem.AddForceAtPosition(
                     impluse._ToUnityEngine(),
@@ -97,7 +86,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
-            fixedUpdateQueue.Add(() =>
+            csItemHandler.AddFixedUpdateAction(() =>
             {
                 movableItem.AddForce(torque._ToUnityEngine(), UnityEngine.ForceMode.Impulse);
             });

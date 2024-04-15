@@ -16,6 +16,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         readonly GameObject gameObject;
         readonly ClusterVR.CreatorKit.Item.IItem parent;
+        readonly ClusterVR.CreatorKit.World.ITextView textView;
         readonly IUpdateListenerBinder updateListenerBinder;
         readonly string positionCallbackKey;
         readonly string rotationCallbackKey;
@@ -30,6 +31,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public SubNode(
             Transform transform,
             ClusterVR.CreatorKit.Item.IItem parent,
+            ClusterVR.CreatorKit.World.ITextView textView,
             IUpdateListenerBinder updateListenerBinder
         )
         {
@@ -43,6 +45,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 this.prevSetPosition = gameObject.transform.localPosition;
             }
             this.parent = parent;
+            this.textView = textView;
             this.updateListenerBinder = updateListenerBinder;
         }
 
@@ -219,6 +222,31 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             );
 
 
+        }
+
+        public void setText(string text)
+        {
+            textView.SetText(text);
+        }
+
+        public void setTextAlignment(TextAlignment alignment)
+        {
+            textView.SetTextAlignment((UnityEngine.TextAlignment)alignment);
+        }
+
+        public void setTextAnchor(TextAnchor anchor)
+        {
+            textView.SetTextAnchor((UnityEngine.TextAnchor)anchor);
+        }
+
+        public void setTextColor(float r, float g, float b, float a)
+        {
+            textView.SetColor(new Color(r, g, b, a));
+        }
+
+        public void setTextSize(float size)
+        {
+            textView.SetSize(size);
         }
 
         float MaxDistance(Vector3 v1, Vector3 v2)

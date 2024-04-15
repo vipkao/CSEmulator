@@ -84,6 +84,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                     ),
                     h => new EmulateClasses.PlayerHandle(
                         h.playerController,
+                        h.userInterfaceHandler,
+                        h.textInputSender,
                         owner
                     )
                 );

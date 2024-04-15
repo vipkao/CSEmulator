@@ -12,16 +12,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public string id => playerController.id;
 
         public IPlayerController playerController { get; private set; }
+        public IUserInterfaceHandler userInterfaceHandler { get; private set; }
+        public ITextInputSender textInputSender { get; private set; }
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
 
         //csOwnerItemHandlerとはこのハンドルがいるスクリプト空間($)のこと。
         public PlayerHandle(
             IPlayerController playerController,
+            IUserInterfaceHandler userInterfaceHandler,
+            ITextInputSender textInputSender,
             Components.CSEmulatorItemHandler csOwnerItemHandler
         )
         {
             this.playerController = playerController;
+            this.userInterfaceHandler = userInterfaceHandler;
+            this.textInputSender = textInputSender;
             this.csOwnerItemHandler = csOwnerItemHandler;
         }
 
@@ -76,6 +82,23 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             var q = playerController.GetRotation();
             return new EmulateQuaternion(q);
+        }
+
+        public void requestTextInput(string meta, string title)
+        {
+            if (userInterfaceHandler.isTextInputting)
+            {
+                textInputSender.Send(csOwnerItemHandler.item.Id.Value, "", meta, TextInputStatus.Busy);
+                return;
+            }
+            //呼び出し時のownerのidを保持しておく
+            var id = csOwnerItemHandler.item.Id.Value;
+            userInterfaceHandler.StartTextInput(
+                title,
+                text => textInputSender.Send(id, text, meta, TextInputStatus.Success),
+                () => textInputSender.Send(id, "", meta, TextInputStatus.Refused),
+                () => textInputSender.Send(id, "", meta, TextInputStatus.Busy)
+            );
         }
 
         public void resetPlayerEffects()

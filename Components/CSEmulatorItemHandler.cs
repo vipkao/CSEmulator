@@ -14,6 +14,11 @@ namespace Assets.KaomoLab.CSEmulator.Components
         public event KaomoLab.CSEmulator.Handler OnFixedUpdate = delegate { };
         public event KaomoLab.CSEmulator.Handler<Collision> OnCollision = delegate { };
 
+        public string id
+        {
+            get => item.Id.ToString();
+        }
+
         public ClusterVR.CreatorKit.Item.IItem item
         {
             get => GetItem();
@@ -32,6 +37,8 @@ namespace Assets.KaomoLab.CSEmulator.Components
         readonly BurstableThrottle playerhrottle = new BurstableThrottle(0.09d, 5);
 
         OverlapManager<CSEmulatorItemHandler, CSEmulatorPlayerHandler> overlapManager;
+
+        ActionBatch fixedUpdateActions;
 
         //実装上は妥当だとは思うけど、権能上は妥当ではないように思える。
         //CSETODO しかも設定するタイミングがContructでは行えないという気持ち悪さ。
@@ -58,6 +65,8 @@ namespace Assets.KaomoLab.CSEmulator.Components
             }
 
             overlapManager = new OverlapManager<CSEmulatorItemHandler, CSEmulatorPlayerHandler>(gameObject);
+
+            fixedUpdateActions = new ActionBatch();
 
             gameObjectName = gameObject.name;
         }
@@ -93,10 +102,17 @@ namespace Assets.KaomoLab.CSEmulator.Components
             playerhrottle.Discharge(time);
         }
 
+        public void AddFixedUpdateAction(Action action)
+        {
+            fixedUpdateActions.Add(action);
+        }
+
         void FixedUpdate()
         {
             //非アクティブになったら物理演算も行えないので問題はなさそうと考える。
             OnFixedUpdate.Invoke();
+
+            fixedUpdateActions?.Do();
         }
 
         private void Update()

@@ -3,11 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using UnityEngine;
 
 namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 {
     public class CodeRunner
     {
+        //Startのタイミングが任意であるため、インスタンスメンバをできる限りnullにしたくないという思想。
+        public class CodeEvaluater
+            : EmulateClasses.ICodeEvaluater
+        {
+            readonly GameObject gameObject;
+            readonly Jint.Engine engine;
+
+            public CodeEvaluater(
+                GameObject gameObject,
+                Jint.Engine engine
+            )
+            {
+                this.gameObject = gameObject;
+                this.engine = engine;
+            }
+
+            public void Evaluate(string code)
+            {
+                try
+                {
+                    engine.Execute(code);
+                }
+                catch (Exception e)
+                {
+                    Commons.ExceptionLogger(e, gameObject);
+                }
+            }
+        }
+
         readonly UnityEngine.GameObject gameObject;
         readonly string code;
         public readonly Components.CSEmulatorItemHandler csItemHandler;
@@ -17,8 +47,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly OnUpdateBridge onUpdateBridge;
         readonly OnUpdateBridge onFixedUpdateBridge;
         readonly ItemMessageRouter itemMessageRouter;
+        readonly TextInputRouter textInputRouter;
         readonly PlayerHandlerStore playerHandleStore;
         readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
+        readonly UserInterfacePreparer userInterfacePreparer;
         readonly IRunnerOptions options;
         readonly ILoggerFactory loggerFactory;
 
@@ -30,8 +62,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             Components.CSEmulatorItemHandler csItemHandler,
             PrefabItemStore prefabItemStore,
             ItemMessageRouter itemMessageRouter,
+            TextInputRouter textInputRouter,
             PlayerHandlerStore playerHandleStore,
             PlayerControllerBridgeFactory playerControllerBridgeFactory,
+            UserInterfacePreparer userInterfacePreparer,
             IRunnerOptions options,
             ILoggerFactory loggerFactory
         )
@@ -40,8 +74,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.csItemHandler = csItemHandler;
             this.prefabItemStore = prefabItemStore;
             this.itemMessageRouter = itemMessageRouter;
+            this.textInputRouter = textInputRouter;
             this.playerHandleStore = playerHandleStore;
             this.playerControllerBridgeFactory = playerControllerBridgeFactory;
+            this.userInterfacePreparer = userInterfacePreparer;
             this.options = options;
             this.loggerFactory = loggerFactory;
 
@@ -73,6 +109,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var logger = loggerFactory.Create(new JintProgramStatus(engine));
             var exceptionFactory = new ByEngineExceptionFactory(engine);
             csItemHandler.itemExceptionFactory = exceptionFactory;
+            var codeEvaluater = new CodeEvaluater(gameObject, engine);
 
             var clusterScript = emulateClassFactory.CreateDefaultClusterScript(
                 gameObject,
@@ -80,10 +117,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 onFixedUpdateBridge,
                 itemMessageRouter,
                 itemMessageRouter,
+                textInputRouter,
+                textInputRouter,
                 prefabItemStore,
                 playerHandleStore,
                 playerControllerBridgeFactory,
                 exceptionFactory,
+                userInterfacePreparer,
+                codeEvaluater,
                 stateProxy,
                 logger
             );
@@ -97,6 +138,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             SetClass<EmulateClasses.HumanoidPose>(engine, "HumanoidPose");
             SetClass<EmulateClasses.Muscles>(engine, "Muscles");
             SetClass<EmulateClasses.ItemTemplateId>(engine, "ItemTemplateId");
+            SetClass<EmulateClasses.TextAlignment>(engine, "TextAlignment");
+            SetClass<EmulateClasses.TextAnchor>(engine, "TextAnchor");
+            SetClass<EmulateClasses.TextInputStatus>(engine, "TextInputStatus");
 
             try
             {

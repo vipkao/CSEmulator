@@ -14,8 +14,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         readonly PrefabItemStore prefabItemStore;
         readonly ItemMessageRouter itemMessageRouter;
+        readonly TextInputRouter textInputRouter;
         readonly PlayerHandlerStore playerHandleStore;
         readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
+        readonly UserInterfacePreparer userInterfacePreparer;
         readonly OptionBridge optionBridge;
 
         List<CodeRunner> codeRunners = new List<CodeRunner>();
@@ -24,24 +26,34 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         bool isRunning = false;
 
         public EngineFacade(
-            ItemCollector itemCollector,
-            VrmPreparer vrmPreparer,
             OptionBridge optionBridge,
+            ClusterVR.CreatorKit.Editor.Preview.Item.ItemCreator itemCreator,
             ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer,
             ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager
         )
         {
             this.optionBridge = optionBridge;
-            this.itemCollector = itemCollector;
-            this.vrmPreparer = vrmPreparer;
+            var previewFinder = new CckPreviewFinder();
+            this.itemCollector = new ItemCollector(
+                itemCreator
+            );
+            this.vrmPreparer = new VrmPreparer(
+                previewFinder,
+                optionBridge.raw.vrm,
+                optionBridge
+            );
 
             prefabItemStore = new PrefabItemStore(
                 itemCollector.GetAllItemPrefabs()
             );
             itemMessageRouter = new ItemMessageRouter();
+            textInputRouter = new TextInputRouter();
             playerHandleStore = new PlayerHandlerStore();
             playerControllerBridgeFactory = new PlayerControllerBridgeFactory(
                 spawnPointManager
+            );
+            userInterfacePreparer = new UserInterfacePreparer(
+                previewFinder
             );
             this.optionBridge = optionBridge;
 
@@ -98,8 +110,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 itemHandler,
                 prefabItemStore,
                 itemMessageRouter,
+                textInputRouter,
                 playerHandleStore,
                 playerControllerBridgeFactory,
+                userInterfacePreparer,
                 optionBridge,
                 loggerFactory
             );
@@ -115,6 +129,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 runner.Update();
             }
             itemMessageRouter.Routing();
+            textInputRouter.Routing();
         }
 
         public void Shutdown()

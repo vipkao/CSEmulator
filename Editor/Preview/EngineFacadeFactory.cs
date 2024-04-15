@@ -20,30 +20,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         public EngineFacade CreateDefault(
         )
         {
-            return Create(
-                new Engine.ItemCollector(
-                    ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemCreator
-                ),
-                new Engine.VrmPreparer(
-                    options.raw.vrm,
-                    options
-                )
-            );
-        }
-
-        //CSETODO テストのことを考えてつくったけど、不要になるかもしれない。
-        public EngineFacade Create(
-            Engine.ItemCollector itemCollector,
-            Engine.VrmPreparer vrmPreparer
-        )
-        {
             return new EngineFacade(
-                itemCollector,
-                vrmPreparer,
                 options,
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemCreator,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SpawnPointManager
             );
         }
+
     }
 }

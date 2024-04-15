@@ -12,6 +12,7 @@
         "KaomoLab.CSEmulator.Editor",
         "KaomoLab.CSEmulator.Editor.EmulateClasses",
         "KaomoLab.CSEmulator.Components",
+        "KaomoLab.CSEmulator.UIs",
         "VRM"
     ],
     "includePlatforms": [
