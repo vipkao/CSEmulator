@@ -18,6 +18,9 @@ namespace Assets.KaomoLab.CSEmulator
         Func<bool> IsRightHandKeyUp { get; }
         Func<bool> IsLeftHandKeyDown { get; }
         Func<bool> IsLeftHandKeyUp { get; }
+
+        Func<bool> IsWalkKey { get; }
+        Func<bool> IsDashKey { get; }
     }
     public interface IProgramStatus
     {

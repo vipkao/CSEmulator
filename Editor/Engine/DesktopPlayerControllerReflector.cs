@@ -12,16 +12,22 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 {
     //Reflection以上のことをさせてはいけない。
     public class DesktopPlayerControllerReflector
-        : Components.IVelocityYHolder
+        : Components.IVelocityYHolder,
+        Components.IBaseMoveSpeedHolder
     {
         readonly DesktopPlayerController controller;
 
         readonly FieldInfo velocityY;
+        readonly FieldInfo baseMoveSpeed;
 
         float IVelocityYHolder.value
         {
             get => (float)velocityY.GetValue(controller);
             set => velocityY.SetValue(controller, value);
+        }
+        float IBaseMoveSpeedHolder.value {
+            get => (float)baseMoveSpeed.GetValue(controller);
+            set => baseMoveSpeed.SetValue(controller, value);
         }
 
         public DesktopPlayerControllerReflector(
@@ -31,6 +37,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.controller = controller;
             velocityY = typeof(DesktopPlayerController)
                 .GetField("velocityY", BindingFlags.NonPublic | BindingFlags.Instance);
+            baseMoveSpeed = typeof(DesktopPlayerController)
+                .GetField("baseMoveSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
 
         }
     }

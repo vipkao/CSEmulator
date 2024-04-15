@@ -19,9 +19,8 @@ namespace Assets.KaomoLab.CSEmulator
         int forwardDirection = 0;
         int rightForce = 0;
         int rightDirection = 0;
-        int walkingSpeed = 0;
 
-        bool needRefresh = false;
+        bool needRefresh = true;
         bool isFaceConstraintForward = false;
         bool needForceForward = false;
 
@@ -33,7 +32,6 @@ namespace Assets.KaomoLab.CSEmulator
         }
 
         public void Update(
-            Action<int> OnWalkingChanged,
             Action<int> OnForwardDirectionChanged,
             Action<int> OnRightDirectionChanged
         )
@@ -46,15 +44,14 @@ namespace Assets.KaomoLab.CSEmulator
             if (changed || needRefresh)
             {
                 needRefresh = false;
-                var toWalkingSpeed = forwardForce == 0 && rightForce == 0 ? 0 : 1;
-                if(walkingSpeed != toWalkingSpeed)
-                {
-                    walkingSpeed = toWalkingSpeed;
-                    OnWalkingChanged(walkingSpeed);
-                }
 
                 var toForwardDirection = CalcDirection(forwardDirection, forwardForce, rightForce);
                 var toRightDirection = CalcDirection(rightDirection, rightForce, forwardForce);
+                if (forwardDirection == 0 && rightDirection == 0)
+                {
+                    //デフォルト前向き
+                    toForwardDirection = 1;
+                }
                 if (isFaceConstraintForward && forwardForce == 0 && rightForce == 0)
                 {
                     toForwardDirection = 1;

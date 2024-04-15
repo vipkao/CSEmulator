@@ -50,7 +50,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var csPlayerHandler = vrmInstance.AddComponent<Components.CSEmulatorPlayerHandler>();
             var characterController = vrmInstance.GetComponentInParent<CharacterController>();
             var csPlayerController = characterController.gameObject.AddComponent<Components.CSEmulatorPlayerController>();
-            var cckPlayerGravityHolder = new DesktopPlayerControllerReflector(
+            var desktopPlayerControllerReflector = new DesktopPlayerControllerReflector(
                 vrmInstance.GetComponentInParent<ClusterVR.CreatorKit.Preview.PlayerController.DesktopPlayerController>()
             );
             var animationController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
@@ -59,7 +59,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             csPlayerController.Construct(
                 new UnityCharacterController(characterController),
                 animationController,
-                cckPlayerGravityHolder,
+                desktopPlayerControllerReflector,
+                desktopPlayerControllerReflector,
                 perspectiveChangeNotifier,
                 new Implements.UnityKeyInput()
             );

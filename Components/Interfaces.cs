@@ -10,6 +10,10 @@ namespace Assets.KaomoLab.CSEmulator.Components
     {
         public float value { get; set; }
     }
+    public interface IBaseMoveSpeedHolder
+    {
+        public float value { get; set; }
+    }
     public interface IPerspectiveChangeNotifier
     {
         event Handler<bool> OnChanged;

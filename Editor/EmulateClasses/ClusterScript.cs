@@ -364,6 +364,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     c = c
                 })
                 .Where(t => t.i != null)
+                .Where(t => !t.i.Id.Equals(item.Id))
                 .Where(t =>
                 {
                     if (null != t.c.gameObject.GetComponent<ClusterVR.CreatorKit.Item.IPhysicalShape>())
