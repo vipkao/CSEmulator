@@ -1,5 +1,4 @@
 ﻿using Assets.KaomoLab.CSEmulator.Editor.EmulateClasses;
-using Codice.CM.Client.Differences.Graphic;
 using System;
 using System.Collections.Generic;
 using System.Linq;
