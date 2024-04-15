@@ -45,9 +45,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var animationController = UnityEditor.AssetDatabase.LoadAssetAtPath<RuntimeAnimatorController>(
                 "Assets/KaomoLab/CSEmulator/Components/Animations/Player.controller"
             );
+            var worldRuntimeSettings = ClusterVR.CreatorKit.Editor.Builder.WorldRuntimeSettingGatherer.GatherWorldRuntimeSettings(
+                UnityEngine.SceneManagement.SceneManager.GetActiveScene()
+            ).FirstOrDefault();
             csPlayerController.Construct(
+                new Components.CSEmulatorPlayerController.MovingPlatformSettings(
+                    worldRuntimeSettings
+                ),
                 new UnityCharacterController(characterController),
                 animationController,
+                desktopPlayerControllerReflector,
                 desktopPlayerControllerReflector,
                 desktopPlayerControllerReflector,
                 perspectiveChangeNotifier,

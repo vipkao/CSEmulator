@@ -5,6 +5,7 @@
         "ClusterVR.CreatorKit.Item",
         "ClusterVR.CreatorKit.Item.Implements",
         "ClusterVR.CreatorKit.Preview",
+        "ClusterVR.CreatorKit.World.Implements",
         "KaomoLab.CSEmulator.Editor",
         "KaomoLab.CSEmulator",
         "VRM"

@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Assets.KaomoLab.CSEmulator.Components;
 using ClusterVR.CreatorKit.Preview.PlayerController;
+using UnityEngine;
 
 
 namespace Assets.KaomoLab.CSEmulator.Editor.Engine
@@ -13,12 +14,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     //Reflection以上のことをさせてはいけない。
     public class DesktopPlayerControllerReflector
         : Components.IVelocityYHolder,
-        Components.IBaseMoveSpeedHolder
+        Components.IBaseMoveSpeedHolder,
+        Components.IPlayerRotateHolder
     {
         readonly DesktopPlayerController controller;
 
         readonly FieldInfo velocityY;
         readonly FieldInfo baseMoveSpeed;
+        readonly FieldInfo rootTransform;
 
         float IVelocityYHolder.value
         {
@@ -30,6 +33,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             set => baseMoveSpeed.SetValue(controller, value);
         }
 
+        Transform IPlayerRotateHolder.rotateTransform => (Transform)rootTransform.GetValue(controller);
+
         public DesktopPlayerControllerReflector(
             DesktopPlayerController controller
         )
@@ -39,6 +44,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 .GetField("velocityY", BindingFlags.NonPublic | BindingFlags.Instance);
             baseMoveSpeed = typeof(DesktopPlayerController)
                 .GetField("baseMoveSpeed", BindingFlags.NonPublic | BindingFlags.Instance);
+            rootTransform = typeof(DesktopPlayerController)
+                .GetField("rootTransform", BindingFlags.NonPublic | BindingFlags.Instance);
 
         }
     }

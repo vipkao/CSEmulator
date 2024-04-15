@@ -1,4 +1,5 @@
 ﻿using ClusterVR.CreatorKit.Preview.PlayerController;
+using ClusterVR.CreatorKit.World.Implements.WorldRuntimeSetting;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +13,22 @@ namespace Assets.KaomoLab.CSEmulator.Components
     public class CSEmulatorPlayerController
         : MonoBehaviour
     {
+        public class MovingPlatformSettings
+        {
+            public readonly bool UseMovingPlatform;
+            public readonly bool MovingPlatformHorizontalInertia;
+            public readonly bool MovingPlatformVerticalInertia;
+
+            public MovingPlatformSettings(WorldRuntimeSetting worldRuntimeSetting)
+            {
+                UseMovingPlatform = worldRuntimeSetting?.UseMovingPlatform ?? WorldRuntimeSetting.DefaultValues.UseMovingPlatform;
+                MovingPlatformHorizontalInertia = worldRuntimeSetting?.MovingPlatformHorizontalInertia ?? WorldRuntimeSetting.DefaultValues.MovingPlatformHorizontalInertia;
+                MovingPlatformVerticalInertia = worldRuntimeSetting?.MovingPlatformVerticalInertia ?? WorldRuntimeSetting.DefaultValues.MovingPlatformVerticalInertia;
+                if (UseMovingPlatform)
+                    UnityEngine.Debug.Log("移動する床に追従する挙動はCSEmulatorにより少しは再現できているかもしれません。");
+            }
+        }
+
         const string RIGHT_HAND_UP = "IsRightHandUp";
         const string LEFT_HAND_UP = "IsLeftHandUp";
         const string WALKING = "IsWalking";
@@ -23,6 +40,8 @@ namespace Assets.KaomoLab.CSEmulator.Components
         public Vector3 velocity { get; private set; } = Vector3.zero;
         public float gravity { get; set; } = Commons.STANDARD_GRAVITY;
         bool isVelocityAdded = false;
+        Vector3 movingPlatformHorizontalInertia = Vector3.zero;
+        Vector3 movingPlatformVerticalInertia = Vector3.zero;
 
         Vector3 prevPosition = new Vector3(0, 0, 0);
         float baseSpeed;
@@ -31,6 +50,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         KeyWalkManager walkManager;
         BaseMoveSpeedManager speedManager;
         FaceConstraintManager faceConstraintManager;
+        PlayerGroundingManager playerGroundingManager;
 
         public HumanPoseManager poseManager { get; private set; } = null;
 
@@ -47,24 +67,29 @@ namespace Assets.KaomoLab.CSEmulator.Components
         }
         Animator _animator = null;
 
-
+        MovingPlatformSettings movingPlatformSettings;
         IVelocityYHolder cckPlayerVelocityY;
         IBaseMoveSpeedHolder cckPlayerBaseMoveSpeed;
+        IPlayerRotateHolder playerRotateHolder;
         IPerspectiveChangeNotifier perspectiveChangeNotifier;
         IRawInput rawInput;
 
         public void Construct(
+            MovingPlatformSettings movingPlatformSettings,
             ICharacterController characterController,
             RuntimeAnimatorController animatorController,
             IVelocityYHolder cckPlayerVelocityY,
             IBaseMoveSpeedHolder cckPlayerBaseMoveSpeed,
+            IPlayerRotateHolder playerRotateHolder,
             IPerspectiveChangeNotifier perspectiveChangeNotifier,
             IRawInput rawInput
         )
         {
+            this.movingPlatformSettings = movingPlatformSettings;
             this.characterController = characterController;
             this.cckPlayerVelocityY = cckPlayerVelocityY;
             this.cckPlayerBaseMoveSpeed = cckPlayerBaseMoveSpeed;
+            this.playerRotateHolder = playerRotateHolder;
             this.animator.runtimeAnimatorController = animatorController;
             this.walkManager = new KeyWalkManager(
                 rawInput
@@ -96,6 +121,12 @@ namespace Assets.KaomoLab.CSEmulator.Components
             //CharacterControllerとRigidbody(+CapsuleCollider)の併用は
             //ほぼ間違いないように思える
             AddCapsuleCollider();
+
+            playerGroundingManager = new PlayerGroundingManager(
+                0.0001f,
+                GetComponent<CharacterController>(),
+                playerRotateHolder.rotateTransform
+            );
         }
         private void AddCapsuleCollider()
         {
@@ -129,6 +160,16 @@ namespace Assets.KaomoLab.CSEmulator.Components
             isVelocityAdded = true;
         }
 
+        private void OnCollisionEnter(Collision collision)
+        {
+            playerGroundingManager.AddCollision(collision);
+        }
+
+        private void OnCollisionExit(Collision collision)
+        {
+            playerGroundingManager.RemoveCollision(collision);
+        }
+
         private void Update()
         {
             var p = gameObject.transform.position;
@@ -147,6 +188,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             //そのインスタンス数分だけ処理が重複してしまう可能性がある。
             //その危険性を排除したい。
 
+            ApplyMovingPlatform(); //velocity弄るので最初
             ApplyAdditionalGravity();
             ApplyAdditionalVelocity();
             ApplyBaseMoveSpeed();
@@ -158,6 +200,43 @@ namespace Assets.KaomoLab.CSEmulator.Components
             //つまり歩きモーションがポーズのリセット兼ねている
             ApplyAnimation();
             poseManager.Apply();
+        }
+        void ApplyMovingPlatform()
+        {
+            if (!movingPlatformSettings.UseMovingPlatform) return;
+
+            playerGroundingManager.UpdateGrounded((isGrounded, delta) =>
+            {
+                if (!isGrounded) return;
+                gameObject.transform.position += delta.position;
+                prevPosition += delta.position;
+                playerRotateHolder.rotateTransform.rotation = Quaternion.Euler(
+                    0, (delta.rotation * playerRotateHolder.rotateTransform.rotation).eulerAngles.y, 0
+                );
+            });
+            if (playerGroundingManager.IsTakingOff())
+            {
+                movingPlatformHorizontalInertia = playerGroundingManager.GetHorizontalInertia();
+                movingPlatformVerticalInertia = playerGroundingManager.GetVerticalInertia();
+                if (!movingPlatformSettings.MovingPlatformHorizontalInertia)
+                    movingPlatformHorizontalInertia = Vector3.zero;
+                if (!movingPlatformSettings.MovingPlatformVerticalInertia)
+                    movingPlatformVerticalInertia = Vector3.zero;
+                velocity += movingPlatformHorizontalInertia;
+                velocity += movingPlatformVerticalInertia;
+                if(movingPlatformHorizontalInertia != Vector3.zero || movingPlatformVerticalInertia != Vector3.zero)
+                    isVelocityAdded = true;
+            }
+            if (playerGroundingManager.IsGrounding())
+            {
+                //CCK2.11.0着地時に移動床からの慣性分はキャンセルされるっぽい
+                if (movingPlatformHorizontalInertia == Vector3.zero && movingPlatformVerticalInertia == Vector3.zero)
+                    return;
+                velocity -= movingPlatformHorizontalInertia;
+                velocity -= movingPlatformVerticalInertia;
+                movingPlatformHorizontalInertia = Vector3.zero;
+                movingPlatformVerticalInertia = Vector3.zero;
+            }
         }
         void ApplyAdditionalGravity()
         {
