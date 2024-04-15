@@ -118,6 +118,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             csPlayerController.poseManager.InvalidateMuscles();
         }
 
+        public void SetHumanTransition(double timeoutSeconds, double timeoutTransitionSeconds, double transitionSeconds)
+        {
+            csPlayerController.poseManager.SetHumanTransition(timeoutSeconds, timeoutTransitionSeconds, transitionSeconds);
+        }
+
+        public void InvalidateHumanTransition()
+        {
+            csPlayerController.poseManager.InvalidateHumanTransition();
+        }
+
         public HumanPose GetHumanPose()
         {
             return csPlayerController.poseManager.GetHumanPose();

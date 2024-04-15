@@ -183,6 +183,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 playerController.SetHumanPosition(null);
                 playerController.SetHumanRotation(null);
                 playerController.InvalidateHumanMuscles();
+                playerController.InvalidateHumanTransition();
                 return;
             }
 
@@ -202,6 +203,20 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 playerController.SetHumanMuscles(
                     pose.muscles.muscles,
                     pose.muscles.changed
+                );
+            }
+
+            if(setHumanoidPoseOption == null)
+            {
+                playerController.InvalidateHumanTransition();
+            }
+            else
+            {
+                var op = setHumanoidPoseOption.Nomalized();
+                playerController.SetHumanTransition(
+                    op.timeoutSeconds,
+                    op.timeoutTransitionSeconds,
+                    op.transitionSeconds
                 );
             }
         }

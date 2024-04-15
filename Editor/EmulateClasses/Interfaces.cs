@@ -90,6 +90,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void SetHumanRotation(UnityEngine.Quaternion? rotation);
         void SetHumanMuscles(float[] muscles, bool[] hasMascles);
         void InvalidateHumanMuscles();
+        void SetHumanTransition(double timeoutSeconds, double timeoutTransitionSeconds, double transitionSeconds);
+        void InvalidateHumanTransition();
         UnityEngine.HumanPose GetHumanPose();
 
         void ChangeGrabbing(bool isGrab);
