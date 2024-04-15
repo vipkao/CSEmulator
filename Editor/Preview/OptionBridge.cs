@@ -18,8 +18,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public EmulatorOptions raw { get; private set; }
 
+        public string userIdfc => raw.userIdfc;
         public string userId => raw.userId;
-
         public string userDisplayName => raw.userName;
 
         public bool exists => raw.exists;

@@ -65,6 +65,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
 
             EditorGUILayout.LabelField("PlayerHandle");
             op.exists = EditorGUILayout.Toggle(new GUIContent("　.exists", "PlayerHandle.existsの値を指定できます。"), op.exists);
+            op.userIdfc = EditorGUILayout.TextField(new GUIContent("　.idfc", "PlayerHandle.idfcの値を指定できます。"), op.userIdfc);
+            if (!op.userIdfcPattern.IsMatch(op.userIdfc))
+            {
+                EditorGUILayout.HelpBox(
+                    "idfcの形式ではありません。", MessageType.Warning
+                );
+            }
+            if (op.userIdfc == "")
+                op.userIdfc = op.DefaultUserIdfc;
             op.userId = EditorGUILayout.TextField(new GUIContent("　.userId", "PlayerHandle.userIdの値を指定できます。"), op.userId);
             if (!op.userIdPattern.IsMatch(op.userId))
             {

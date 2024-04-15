@@ -66,6 +66,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             }
         }
 
+        const string PrefsKeyUserIdfc = "KaomoCSEmulator_userIdfc";
+        public readonly string DefaultUserIdfc = new String(Enumerable.Repeat(0, 4).SelectMany(_ => new System.Random().Next().ToString("X")).ToArray()).ToLower();
+        public readonly Regex userIdfcPattern = new Regex("^[0-9a-z]{32}$");
+        public string userIdfc
+        {
+            get => PlayerPrefs.GetString(PrefsKeyUserIdfc, DefaultUserIdfc);
+            set => PlayerPrefs.SetString(PrefsKeyUserIdfc, value);
+        }
         const string PrefsKeyUserId = "KaomoCSEmulator_userId";
         public readonly string DefaultUserId = new String(Enumerable.Repeat('a', 16).Select(c => (char)(c + (new System.Random().Next() % 26))).ToArray());
         public readonly Regex userIdPattern = new Regex(".*");

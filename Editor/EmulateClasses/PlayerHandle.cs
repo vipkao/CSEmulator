@@ -46,9 +46,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public string id => playerController.id;
 
+        public string idfc => playerMeta.exists ? playerMeta.userIdfc : null;
         public string userId => playerMeta.exists ? playerMeta.userId : null;
         public string userDisplayName => playerMeta.exists ? playerMeta.userDisplayName : null;
-
 
         public void addVelocity(EmulateVector3 velocity)
         {

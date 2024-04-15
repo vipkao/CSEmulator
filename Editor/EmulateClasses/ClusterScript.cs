@@ -397,6 +397,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 .Select(c => c.gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>())
                 .Where(h => h != null)
                 .Select(h => playerHandleFactory.CreateById(h.id, csItemHandler))
+                //いつの間にか重複破棄していた？v2.7.0.4確認
+                .GroupBy(h => h.id)
+                .Select(g => g.First())
                 .ToArray();
 
             return handles;

@@ -45,6 +45,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
     public interface IPlayerMeta
     {
+        string userIdfc { get; }
         string userId { get; }
         string userDisplayName { get; }
         bool exists { get; }
