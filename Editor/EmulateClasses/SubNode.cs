@@ -130,7 +130,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             positionChangeInterval = 0;
             updateListenerBinder.SetUpdateCallback(
                 positionCallbackKey,
-                gameObject.name,
+                gameObject,
                 (dt) =>
                 {
                     var lerped = Vector3.Lerp(_from, _to, (float)Math.Min(dt / _remain, 1));
@@ -146,7 +146,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     //intervalをLIMITまで計測させる
                     updateListenerBinder.SetUpdateCallback(
                         positionCallbackKey,
-                        gameObject.name,
+                        gameObject,
                         (dt) =>
                         {
                             positionChangeInterval += dt;
@@ -187,7 +187,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             rotationChangeInterval = 0;
             updateListenerBinder.SetUpdateCallback(
                 rotationCallbackKey,
-                gameObject.name,
+                gameObject,
                 (dt) =>
                 {
                     var lerped = Quaternion.Slerp(_from, _to, (float)Math.Min(dt / _remain, 1));
@@ -203,7 +203,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     //intervalをLIMITまで計測させる
                     updateListenerBinder.SetUpdateCallback(
                         rotationCallbackKey,
-                        gameObject.name,
+                        gameObject,
                         (dt) =>
                         {
                             rotationChangeInterval += dt;

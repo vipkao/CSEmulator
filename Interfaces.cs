@@ -6,12 +6,6 @@ using System.Threading.Tasks;
 
 namespace Assets.KaomoLab.CSEmulator
 {
-    public interface ILogger
-    {
-        void Info(string message);
-        void Warning(string message);
-        void Error(string message);
-    }
     public interface IProgramStatus
     {
         string GetLineInfo();

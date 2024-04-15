@@ -20,8 +20,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         readonly PlayerControllerBridgeFactory playerControllerBridgeFactory;
 
 
-        readonly ILogger logger;
-
         List<CodeRunner> codeRunners = new List<CodeRunner>();
         UnityEngine.GameObject vrm = null;
 
@@ -32,14 +30,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             ItemCollector itemCollector,
             VrmPreparer vrmPreparer,
             ClusterVR.CreatorKit.Editor.Preview.Item.ItemDestroyer itemDestroyer,
-            ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager,
-            ILogger logger
+            ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager
         )
         {
             this.options = options;
             this.itemCollector = itemCollector;
             this.vrmPreparer = vrmPreparer;
-            this.logger = logger;
 
             prefabItemStore = new PrefabItemStore(
                 itemCollector.GetAllItemPrefabs()

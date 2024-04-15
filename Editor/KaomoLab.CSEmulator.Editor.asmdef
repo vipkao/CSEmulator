@@ -2,6 +2,7 @@
     "name": "KaomoLab.CSEmulator.Editor",
     "rootNamespace": "",
     "references": [
+        "KaomoLab.CSEmulator"
     ],
     "includePlatforms": [
         "Editor"

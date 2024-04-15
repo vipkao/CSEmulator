@@ -52,5 +52,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         {
             UnityEngine.Debug.LogWarning(BuildMessage(message));
         }
+
+        public void Exception(Jint.Native.Error.JsError e)
+        {
+            var ps = e.GetOwnProperties()
+                .ToDictionary(kv => kv.Key.ToString(), kv => kv.Value.Value.ToString());
+            var message = BuildMessage(ps["message"] + "\n" + ps["stack"]);
+            UnityEngine.Debug.LogError(message);
+        }
     }
 }

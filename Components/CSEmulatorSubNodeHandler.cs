@@ -5,6 +5,8 @@ using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
 
+using OverlapManager = Assets.KaomoLab.CSEmulator.OverlapManager<Assets.KaomoLab.CSEmulator.Components.CSEmulatorItemHandler, Assets.KaomoLab.CSEmulator.Components.CSEmulatorPlayerHandler>;
+
 namespace Assets.KaomoLab.CSEmulator.Components
 {
     [DisallowMultipleComponent, RequireComponent(typeof(Collider))]
@@ -22,8 +24,8 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         private void OnTriggerEnter(Collider other)
         {
-            if (!CSEmulatorItemHandler.IsOverlapTarget(gameObject, other)) return;
-            var (itemHandler, playerHandler) = CSEmulatorItemHandler.GetHandler(other);
+            if (!OverlapManager.IsOverlapTarget(gameObject, other)) return;
+            var (itemHandler, playerHandler) = OverlapManager.GetHandler(other);
 
             parent.SetSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
         }
@@ -35,8 +37,8 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         private void OnTriggerExit(Collider other)
         {
-            if (!CSEmulatorItemHandler.IsOverlapTarget(gameObject, other)) return;
-            var (itemHandler, playerHandler) = CSEmulatorItemHandler.GetHandler(other);
+            if (!OverlapManager.IsOverlapTarget(gameObject, other)) return;
+            var (itemHandler, playerHandler) = OverlapManager.GetHandler(other);
 
             parent.RemoveSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
         }

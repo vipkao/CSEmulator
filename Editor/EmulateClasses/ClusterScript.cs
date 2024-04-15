@@ -435,6 +435,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             {
                 logger.Info(CSEmulator.Commons.ExpandoObjectToString(eo, openb: "{", closeb: "}", indent: "", separator: ","));
             }
+            else if (v is Jint.Native.Error.JsError je)
+            {
+                logger.Exception(je);
+            }
             else
             {
                 logger.Info(v.ToString());
@@ -494,7 +498,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             catch (Exception e)
             {
-                Commons.ExceptionLogger(e, gameObject.name);
+                Commons.ExceptionLogger(e, gameObject);
             }
 
         }
@@ -512,7 +516,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             catch (Exception e)
             {
-                Commons.ExceptionLogger(e, gameObject.name);
+                Commons.ExceptionLogger(e, gameObject);
             }
         }
 
@@ -540,7 +544,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             catch (Exception ex)
             {
-                Commons.ExceptionLogger(ex, gameObject.name);
+                Commons.ExceptionLogger(ex, gameObject);
             }
         }
 
@@ -552,7 +556,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 Callback(v);
                 isInFixedUpdate = false;
             };
-            fixedUpdateListenerBinder.SetUpdateCallback(gameObject.name, gameObject.name, Wrapped);
+            fixedUpdateListenerBinder.SetUpdateCallback(gameObject.name, gameObject, Wrapped);
         }
 
         public void onReceive(Action<string, object, ItemHandle> Callback)
@@ -580,7 +584,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             catch (Exception e)
             {
-                Commons.ExceptionLogger(e, gameObject.name);
+                Commons.ExceptionLogger(e, gameObject);
             }
         }
         void RidableItem_OnGetOn()
@@ -595,13 +599,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             catch (Exception e)
             {
-                Commons.ExceptionLogger(e, gameObject.name);
+                Commons.ExceptionLogger(e, gameObject);
             }
         }
 
         public void onUpdate(Action<double> Callback)
         {
-            updateListenerBinder.SetUpdateCallback(gameObject.name, gameObject.name, Callback);
+            updateListenerBinder.SetUpdateCallback(gameObject.name, gameObject, Callback);
         }
 
         public void onUse(Action<bool, PlayerHandle> Callback)
@@ -623,7 +627,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 }
                 catch (Exception ex)
                 {
-                    Commons.ExceptionLogger(ex, gameObject.name);
+                    Commons.ExceptionLogger(ex, gameObject);
                 }
             }
             else
@@ -638,7 +642,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 }
                 catch (Exception ex)
                 {
-                    Commons.ExceptionLogger(ex, gameObject.name);
+                    Commons.ExceptionLogger(ex, gameObject);
                 }
             }
         }

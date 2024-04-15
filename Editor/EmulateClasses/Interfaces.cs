@@ -8,9 +8,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public interface IUpdateListenerBinder
     {
-        void SetUpdateCallback(string key, string source, Action<double> Callback);
+        void SetUpdateCallback(string key, UnityEngine.GameObject source, Action<double> Callback);
         void DeleteUpdateCallback(string key);
-        void SetLateUpdateCallback(string key, string source, Action<double> Callback);
+        void SetLateUpdateCallback(string key, UnityEngine.GameObject source, Action<double> Callback);
         void DeleteLateUpdateCallback(string key);
     }
 

@@ -79,7 +79,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return new EmulateVector3(this);
         }
 
-        public EmulateVector3 cross(EmulateVector2 v)
+        public EmulateVector3 cross(EmulateVector3 v)
         {
             var crossed = UnityEngine.Vector3.Cross(_ToUnityEngine(), v._ToUnityEngine());
             Apply(crossed);

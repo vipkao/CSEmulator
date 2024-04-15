@@ -63,7 +63,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
             onUpdateBridge.SetLateUpdateCallback(
                 csItemHandler.gameObject.name + "_throttle",
-                csItemHandler.gameObject.name + "_throttle",
+                csItemHandler.gameObject,
                 CsItemHandler_ThrottleUpdate
             );
 
@@ -102,7 +102,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             }
             catch (Exception e)
             {
-                Commons.ExceptionLogger(e, gameObject.name);
+                Commons.ExceptionLogger(e, gameObject);
             }
         }
         private void CsItemHandler_OnFixedUpdate()

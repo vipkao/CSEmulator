@@ -26,16 +26,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 ),
                 new Engine.VrmPreparer(
                     options.vrm
-                ),
-                new Implements.UnityDebugLog()
+                )
             );
         }
 
         //CSETODO テストのことを考えてつくったけど、不要になるかもしれない。
         public EngineFacade Create(
             Engine.ItemCollector itemCollector,
-            Engine.VrmPreparer vrmPreparer,
-            ILogger logger
+            Engine.VrmPreparer vrmPreparer
         )
         {
             return new EngineFacade(
@@ -43,8 +41,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 itemCollector,
                 vrmPreparer,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer,
-                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SpawnPointManager,
-                logger
+                ClusterVR.CreatorKit.Editor.Preview.Bootstrap.SpawnPointManager
             );
         }
     }

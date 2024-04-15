@@ -11,8 +11,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
     {
         long prevTicks;
 
-        Dictionary<string, (Action<double>, string)> UpdateCallbacks = new Dictionary<string, (Action<double>, string)>();
-        Dictionary<string, (Action<double>, string)> LateUpdateCallbacks = new Dictionary<string, (Action<double>, string)>();
+        Dictionary<string, (Action<double>, UnityEngine.GameObject)> UpdateCallbacks = new Dictionary<string, (Action<double>, UnityEngine.GameObject)>();
+        Dictionary<string, (Action<double>, UnityEngine.GameObject)> LateUpdateCallbacks = new Dictionary<string, (Action<double>, UnityEngine.GameObject)>();
 
 
         public Action InvokeUpdate { get; private set; }
@@ -55,7 +55,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             };
         }
 
-        public void SetUpdateCallback(string key, string source, Action<double> Callback)
+        public void SetUpdateCallback(string key, UnityEngine.GameObject source, Action<double> Callback)
         {
             UpdateCallbacks[key] = (Callback, source);
         }
@@ -66,7 +66,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             UpdateCallbacks.Remove(key);
         }
 
-        public void SetLateUpdateCallback(string key, string source, Action<double> Callback)
+        public void SetLateUpdateCallback(string key, UnityEngine.GameObject source, Action<double> Callback)
         {
             LateUpdateCallbacks[key] = (Callback, source);
         }

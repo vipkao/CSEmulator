@@ -132,6 +132,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
 
+            if(pose == null)
+            {
+                playerController.SetHumanPosition(null);
+                playerController.SetHumanRotation(null);
+                playerController.InvalidateHumanMuscles();
+                return;
+            }
+
             playerController.SetHumanPosition(
                 pose.centerPosition == null ? null : pose.centerPosition._ToUnityEngine()
             );
