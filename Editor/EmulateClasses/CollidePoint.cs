@@ -19,5 +19,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.hit = hit;
             this.selfNode = selfNode;
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[CollidePoint][{0}][{1}]", hit, selfNode);
+        }
     }
 }

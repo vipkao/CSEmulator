@@ -199,11 +199,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             playerController.SetRotation(y);
         }
 
-        public override string ToString()
-        {
-            return string.Format("[PlayerHandle][{0}][{1}]", playerController.vrm.name, id);
-        }
-
         void CheckOwnerDistanceLimit()
         {
             var p1 = playerController.GetPosition();
@@ -224,6 +219,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             throw csOwnerItemHandler.itemExceptionFactory.CreateRateLimitExceeded(
                 String.Format("[{0}]>>>[Player]", csOwnerItemHandler)
             );
+        }
+
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            o.id = id;
+            return o;
+        }
+        public override string ToString()
+        {
+            var vrm = playerController.vrm;
+            return string.Format("[PlayerHandle][{0}][{1}]", vrm == null ? null : vrm.name, id);
         }
     }
 }

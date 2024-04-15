@@ -243,6 +243,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return max;
         }
 
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format(
+                "[SubNode][{1}/{0}]",
+                gameObject == null ? null : gameObject.name,
+                parent == null ? null : parent.gameObject.name
+            );
+        }
 
 
     }

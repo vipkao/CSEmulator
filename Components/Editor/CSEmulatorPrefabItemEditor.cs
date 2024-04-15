@@ -14,8 +14,8 @@ namespace Assets.KaomoLab.CSEmulator.Components.Editor
     public class CSEmulatorPrefabItemEditor
          : UnityEditor.Editor
     {
-        const string UUID_CAPTION = @"UUIDとは「7865f52c-1305-4489-b780-c3562109e5e8」というような文字列です。
-クラフトアイテムのURLの末尾にある文字列がUUIDです。";
+        const string UUID_CAPTION = @"ItemTemplateIdとは「7865f52c-1305-4489-b780-c3562109e5e8」というような文字列です。
+クラフトアイテムの情報取得Windowで取得できます。";
 
 
         public override void OnInspectorGUI()
@@ -24,23 +24,26 @@ namespace Assets.KaomoLab.CSEmulator.Components.Editor
 
             var id = serializedObject.FindProperty("_id");
             EditorGUILayout.PropertyField(
-                id, new GUIContent("UUID")
+                id, new GUIContent("ItemTemplateId")
             );
             if (id.stringValue == "")
             {
                 EditorGUILayout.HelpBox(
-                    "UUIDを入力してください。\n\n" + UUID_CAPTION,
+                    "ItemTemplateIdを入力してください。\n\n" + UUID_CAPTION,
                     MessageType.Warning
                 );
             }
             else if (!KaomoLab.CSEmulator.Commons.IsUUID(id.stringValue))
             {
                 EditorGUILayout.HelpBox(
-                    "UUIDの形式ではありません。\n\n" + UUID_CAPTION,
+                    "ItemTemplateIdの形式ではありません。\n\n" + UUID_CAPTION,
                     MessageType.Error
                 );
             }
-
+            EditorGUILayout.LabelField(
+                "ItemTemplateIdを入力すると、シーン上に配置した場合でも$.destroyできるようになります。",
+                new GUIStyle(GUI.skin.label) { wordWrap = true }
+            );
 
             serializedObject.ApplyModifiedProperties();
 

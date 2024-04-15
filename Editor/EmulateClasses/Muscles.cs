@@ -867,5 +867,118 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
         }
 
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            o.chestFrontBack = chestFrontBack is float ? chestFrontBack : null;
+            o.chestLeftRight = chestLeftRight is float ? chestLeftRight : null;
+            o.chestTwistLeftRight = chestTwistLeftRight is float ? chestTwistLeftRight : null; ;
+            o.headNodDownUp = headNodDownUp is float ? headNodDownUp : null;
+            o.headTiltLeftRight = headTiltLeftRight is float ? headTiltLeftRight : null;
+            o.headTurnLeftRight = headTurnLeftRight is float ? headTurnLeftRight : null;
+            o.jawClose = jawClose is float ? jawClose : null;
+            o.jawLeftRight = jawLeftRight is float ? jawLeftRight : null;
+            o.leftArmDownUp = leftArmDownUp is float ? leftArmDownUp : null;
+            o.leftArmFrontBack = leftArmFrontBack is float ? leftArmFrontBack : null;
+            o.leftArmTwistInOut = leftArmTwistInOut is float ? leftArmTwistInOut : null;
+            o.leftEyeDownUp = leftEyeDownUp is float ? leftEyeDownUp : null;
+            o.leftEyeInOut = leftEyeInOut is float ? leftEyeInOut : null;
+            o.leftFootTwistInOut = leftFootTwistInOut is float ? leftFootTwistInOut : null;
+            o.leftFootUpDown = leftFootUpDown is float ? leftFootUpDown : null;
+            o.leftForearmStretch = leftForearmStretch is float ? leftForearmStretch : null;
+            o.leftForearmTwistInOut = leftForearmTwistInOut is float ? leftForearmTwistInOut : null;
+            o.leftHandDownUp = leftHandDownUp is float ? leftHandDownUp : null;
+            o.leftHandInOut = leftHandInOut is float ? leftHandInOut : null;
+            o.leftIndex1Stretched = leftIndex1Stretched is float ? leftIndex1Stretched : null;
+            o.leftIndex2Stretched = leftIndex2Stretched is float ? leftIndex2Stretched : null;
+            o.leftIndex3Stretched = leftIndex3Stretched is float ? leftIndex3Stretched : null;
+            o.leftIndexSpread = leftIndexSpread is float ? leftIndexSpread : null;
+            o.leftLittle1Stretched = leftLittle1Stretched is float ? leftLittle1Stretched : null;
+            o.leftLittle2Stretched = leftLittle2Stretched is float ? leftLittle2Stretched : null;
+            o.leftLittle3Stretched = leftLittle3Stretched is float ? leftLittle3Stretched : null;
+            o.leftLittleSpread = leftLittleSpread is float ? leftLittleSpread : null;
+            o.leftLowerLegStretch = leftLowerLegStretch is float ? leftLowerLegStretch : null;
+            o.leftLowerLegTwistInOut = leftLowerLegTwistInOut is float ? leftLowerLegTwistInOut : null;
+            o.leftMiddle1Stretched = leftMiddle1Stretched is float ? leftMiddle1Stretched : null;
+            o.leftMiddle2Stretched = leftMiddle2Stretched is float ? leftMiddle2Stretched : null;
+            o.leftMiddle3Stretched = leftMiddle3Stretched is float ? leftMiddle3Stretched : null;
+            o.leftMiddleSpread = leftMiddleSpread is float ? leftMiddleSpread : null;
+            o.leftRing1Stretched = leftRing1Stretched is float ? leftRing1Stretched : null;
+            o.leftRing2Stretched = leftRing2Stretched is float ? leftRing2Stretched : null;
+            o.leftRing3Stretched = leftRing3Stretched is float ? leftRing3Stretched : null;
+            o.leftRingSpread = leftRingSpread is float ? leftRingSpread : null;
+            o.leftShoulderDownUp = leftShoulderDownUp is float ? leftShoulderDownUp : null;
+            o.leftShoulderFrontBack = leftShoulderFrontBack is float ? leftShoulderFrontBack : null;
+            o.leftThumb1Stretched = leftThumb1Stretched is float ? leftThumb1Stretched : null;
+            o.leftThumb2Stretched = leftThumb2Stretched is float ? leftThumb2Stretched : null;
+            o.leftThumb3Stretched = leftThumb3Stretched is float ? leftThumb3Stretched : null;
+            o.leftThumbSpread = leftThumbSpread is float ? leftThumbSpread : null;
+            o.leftToesUpDown = leftToesUpDown is float ? leftToesUpDown : null;
+            o.leftUpperLegFrontBack = leftUpperLegFrontBack is float ? leftUpperLegFrontBack : null;
+            o.leftUpperLegInOut = leftUpperLegInOut is float ? leftUpperLegInOut : null;
+            o.leftUpperLegTwistInOut = leftUpperLegTwistInOut is float ? leftUpperLegTwistInOut : null;
+            o.neckNodDownUp = neckNodDownUp is float ? neckNodDownUp : null;
+            o.neckTiltLeftRight = neckTiltLeftRight is float ? neckTiltLeftRight : null;
+            o.neckTurnLeftRight = neckTurnLeftRight is float ? neckTurnLeftRight : null;
+            o.rightArmDownUp = rightArmDownUp is float ? rightArmDownUp : null;
+            o.rightArmFrontBack = rightArmFrontBack is float ? rightArmFrontBack : null;
+            o.rightArmTwistInOut = rightArmTwistInOut is float ? rightArmTwistInOut : null;
+            o.rightEyeDownUp = rightEyeDownUp is float ? rightEyeDownUp : null;
+            o.rightEyeInOut = rightEyeInOut is float ? rightEyeInOut : null;
+            o.rightFootTwistInOut = rightFootTwistInOut is float ? rightFootTwistInOut : null;
+            o.rightFootUpDown = rightFootUpDown is float ? rightFootUpDown : null;
+            o.rightForearmStretch = rightForearmStretch is float ? rightForearmStretch : null;
+            o.rightForearmTwistInOut = rightForearmTwistInOut is float ? rightForearmTwistInOut : null;
+            o.rightHandDownUp = rightHandDownUp is float ? rightHandDownUp : null;
+            o.rightHandInOut = rightHandInOut is float ? rightHandInOut : null;
+            o.rightIndex1Stretched = rightIndex1Stretched is float ? rightIndex1Stretched : null;
+            o.rightIndex2Stretched = rightIndex2Stretched is float ? rightIndex2Stretched : null;
+            o.rightIndex3Stretched = rightIndex3Stretched is float ? rightIndex3Stretched : null;
+            o.rightIndexSpread = rightIndexSpread is float ? rightIndexSpread : null;
+            o.rightLittle1Stretched = rightLittle1Stretched is float ? rightLittle1Stretched : null;
+            o.rightLittle2Stretched = rightLittle2Stretched is float ? rightLittle2Stretched : null;
+            o.rightLittle3Stretched = rightLittle3Stretched is float ? rightLittle3Stretched : null;
+            o.rightLittleSpread = rightLittleSpread is float ? rightLittleSpread : null;
+            o.rightLowerLegStretch = rightLowerLegStretch is float ? rightLowerLegStretch : null;
+            o.rightLowerLegTwistInOut = rightLowerLegTwistInOut is float ? rightLowerLegTwistInOut : null;
+            o.rightMiddle1Stretched = rightMiddle1Stretched is float ? rightMiddle1Stretched : null;
+            o.rightMiddle2Stretched = rightMiddle2Stretched is float ? rightMiddle2Stretched : null;
+            o.rightMiddle3Stretched = rightMiddle3Stretched is float ? rightMiddle3Stretched : null;
+            o.rightMiddleSpread = rightMiddleSpread is float ? rightMiddleSpread : null;
+            o.rightRing1Stretched = rightRing1Stretched is float ? rightRing1Stretched : null;
+            o.rightRing2Stretched = rightRing2Stretched is float ? rightRing2Stretched : null;
+            o.rightRing3Stretched = rightRing3Stretched is float ? rightRing3Stretched : null;
+            o.rightRingSpread = rightRingSpread is float ? rightRingSpread : null;
+            o.rightShoulderDownUp = rightShoulderDownUp is float ? rightShoulderDownUp : null;
+            o.rightShoulderFrontBack = rightShoulderFrontBack is float ? rightShoulderFrontBack : null;
+            o.rightThumb1Stretched = rightThumb1Stretched is float ? rightThumb1Stretched : null;
+            o.rightThumb2Stretched = rightThumb2Stretched is float ? rightThumb2Stretched : null;
+            o.rightThumb3Stretched = rightThumb3Stretched is float ? rightThumb3Stretched : null;
+            o.rightThumbSpread = rightThumbSpread is float ? rightThumbSpread : null;
+            o.rightToesUpDown = rightToesUpDown is float ? rightToesUpDown : null;
+            o.rightUpperLegFrontBack = rightUpperLegFrontBack is float ? rightUpperLegFrontBack : null;
+            o.rightUpperLegInOut = rightUpperLegInOut is float ? rightUpperLegInOut : null;
+            o.rightUpperLegTwistInOut = rightUpperLegTwistInOut is float ? rightUpperLegTwistInOut : null;
+            o.spineFrontBack = spineFrontBack is float ? spineFrontBack : null;
+            o.spineLeftRight = spineLeftRight is float ? spineLeftRight : null;
+            o.spineTwistLeftRight = spineTwistLeftRight is float ? spineTwistLeftRight : null;
+            o.upperChestFrontBack = upperChestFrontBack is float ? upperChestFrontBack : null;
+            o.upperChestLeftRight = upperChestLeftRight is float ? upperChestLeftRight : null;
+            o.upperChestTwistLeftRight = upperChestTwistLeftRight is float ? upperChestTwistLeftRight : null;
+
+            return o;
+        }
+        public override string ToString()
+        {
+            var o = (System.Dynamic.ExpandoObject)toJSON("");
+            var sets = new List<string>();
+            foreach (var kv in o)
+            {
+                if (Jint.Native.JsValue.Undefined.Equals(kv.Value)) continue;
+                sets.Add(kv.Key+":"+kv.Value);
+            }
+            return String.Format("[Muscles][{0}]", String.Join(",", sets));
+        }
+
     }
 }

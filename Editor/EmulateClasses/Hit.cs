@@ -19,5 +19,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.normal = normal;
             this.point = point;
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[Hit][{0}][{1}]", normal, point);
+        }
     }
 }

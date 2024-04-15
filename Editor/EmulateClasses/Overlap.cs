@@ -20,6 +20,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.selfNode = selfNode;
         }
 
+        public object toJSON(string key)
+        {
+            return this;
+        }
         public override string ToString()
         {
             return String.Format("[Overlap][{0}][{1}]", @object, selfNode);

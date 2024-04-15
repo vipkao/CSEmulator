@@ -30,5 +30,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var pose = new HumanoidPose(partial);
             return pose;
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[HumanoidAnimation][{0}]", entry.Id);
+        }
     }
 }

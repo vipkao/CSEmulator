@@ -37,6 +37,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return hitObject;
         }
 
+        public object toJSON(string key)
+        {
+            return this;
+        }
         public override string ToString()
         {
             return String.Format("[HitObject][{0}][{1}]", itemHandle, playerHandle);

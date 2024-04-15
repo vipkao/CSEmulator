@@ -40,5 +40,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 );
             }
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[HumanoidPose][{0}][{1}][{2}]", centerPosition, centerRotation, muscles);
+        }
+
     }
 }

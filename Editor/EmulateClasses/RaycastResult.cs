@@ -20,5 +20,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.hit = hit;
             this.@object = hitObject;
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[RaycastResult][{0}][{1}]", @object, hit);
+        }
     }
 }

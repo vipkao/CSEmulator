@@ -23,5 +23,20 @@ namespace Assets.KaomoLab.CSEmulator.Editor
             : base(errorConstructor, message)
         {
         }
+
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            o.name = name;
+            o.distanceLimitExceeded = distanceLimitExceeded;
+            o.executionNotAllowed = executionNotAllowed;
+            o.rateLimitExceeded = rateLimitExceeded;
+            o.requestSizeLimitExceeded = requestSizeLimitExceeded;
+            return o;
+        }
+        public override string ToString()
+        {
+            return String.Format("[ClusterScriptError][{0}]", message);
+        }
     }
 }

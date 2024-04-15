@@ -64,15 +64,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             csItemHandler.OnFixedUpdate += CsItemHandler_OnFixedUpdate;
             shutdownActions.Add(() => csItemHandler.OnFixedUpdate -= CsItemHandler_OnFixedUpdate);
 
-            onUpdateBridge.SetLateUpdateCallback(
-                csItemHandler.gameObject.name + "_throttle",
-                csItemHandler.gameObject,
-                CsItemHandler_ThrottleUpdate
-            );
-            shutdownActions.Add(() => onUpdateBridge.DeleteLateUpdateCallback(
-                csItemHandler.gameObject.name + "_throttle"
-            ));
-
             var engineOptions = new Jint.Options();
             if(options.isDebug)
                 engineOptions.Debugger.Enabled = true;
@@ -92,6 +83,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 prefabItemStore,
                 playerHandleStore,
                 playerControllerBridgeFactory,
+                exceptionFactory,
                 stateProxy,
                 logger
             );
@@ -115,16 +107,26 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 Commons.ExceptionLogger(e, gameObject);
             }
 
+            onUpdateBridge.SetLateUpdateCallback(
+                csItemHandler.gameObject.name + "_throttle",
+                csItemHandler.gameObject,
+                (dt) =>
+                {
+                    clusterScript.DischargeOperateLimit(dt);
+                    csItemHandler.DischargeOperateLimit(dt);
+                }
+            );
+            shutdownActions.Add(() => onUpdateBridge.DeleteLateUpdateCallback(
+                csItemHandler.gameObject.name + "_throttle"
+            ));
+
+
             isRunning = true;
             shutdownActions.Add(() => isRunning = false);
         }
         private void CsItemHandler_OnFixedUpdate()
         {
             onFixedUpdateBridge.InvokeUpdate();
-        }
-        private void CsItemHandler_ThrottleUpdate(double dt)
-        {
-            csItemHandler.DischargeOperateLimit(dt);
         }
 
         void SetClass<T>(Jint.Engine engine, string name)

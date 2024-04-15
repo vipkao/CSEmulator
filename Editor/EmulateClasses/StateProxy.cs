@@ -119,5 +119,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //CSETODO 実際は少し違う
             return new object();
         }
+
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            return o;
+        }
+        public override string ToString()
+        {
+            return String.Format("[StateProxy]");
+        }
+
     }
 }

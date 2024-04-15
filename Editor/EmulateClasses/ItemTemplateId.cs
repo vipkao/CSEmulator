@@ -32,5 +32,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //itemCreatorに毎度追加になるため大量生成で重くなったという問題が浮上したら対応する。
             this.cckId = ClusterVR.CreatorKit.Item.ItemTemplateId.Create();
         }
+
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            return o;
+        }
+        public override string ToString()
+        {
+            return String.Format("[ItemTemplateId][{0}]", id);
+        }
+
     }
 }

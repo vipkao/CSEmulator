@@ -28,5 +28,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.@object = hitObject;
             this.relativeVelocity = relativeVelocity;
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            return String.Format("[Collision][{0}][{1}][{2}][{3}]", collidePoints, impulse, @object, relativeVelocity);
+        }
     }
 }

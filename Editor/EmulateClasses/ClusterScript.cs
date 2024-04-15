@@ -26,6 +26,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IPlayerHandleHolder playerHandleHolder;
         readonly IPlayerControllerFactory playerControllerFactory;
         readonly IProgramStatus programStatus;
+        readonly IItemExceptionFactory itemExceptionFactory;
         readonly StateProxy stateProxy;
         readonly ILogger logger;
 
@@ -41,6 +42,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         bool isGrab = false;
         bool isInFixedUpdate = false;
+
+        readonly BurstableThrottle createItemThrottle = new BurstableThrottle(0.09d, 5);
 
         Action<Collision> OnCollideHandler = _ => { };
         Action<bool, bool, PlayerHandle> OnGrabHandler = (_, _, _) => { };
@@ -64,6 +67,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
+            IItemExceptionFactory itemExceptionFactory,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -84,6 +88,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.prefabItemHolder = prefabItemHolder;
             this.playerHandleHolder = playerHandleHolder;
             this.playerControllerFactory = playerControllerFactory;
+            this.itemExceptionFactory = itemExceptionFactory;
             this.stateProxy = stateProxy;
             this.logger = logger;
 
@@ -284,6 +289,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateQuaternion rotation
         )
         {
+            CheckCreateItemOperationLimit();
+            CheckCreateItemDistanceLimit(position._ToUnityEngine());
+
             //実行ごとにテンプレートを登録
             var prefab = prefabItemHolder.GetPrefab(itemTemplateId.id);
             var template = new CreateItemTemplate(prefab, itemTemplateId);
@@ -310,12 +318,38 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             return ret;
         }
+        void CheckCreateItemDistanceLimit(Vector3 target)
+        {
+            var p1 = gameObject.transform.position;
+            var d = UnityEngine.Vector3.Distance(p1, target);
+            //30メートル以内はOK
+            if (d <= 30f) return;
 
+            throw itemExceptionFactory.CreateDistanceLimitExceeded(
+                String.Format("[{0}]>>>[{1}]", gameObject.transform.position, target)
+            );
+        }
+        void CheckCreateItemOperationLimit()
+        {
+            var result = createItemThrottle.TryCharge();
+            if (result) return;
+
+            throw itemExceptionFactory.CreateRateLimitExceeded(
+                String.Format("[{0}]", gameObject.name)
+            );
+        }
         public void destroy()
         {
-            if (!csItemHandler.isCreatedItem)
-                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("動的アイテムのみ実行可能です。");
+            if (!arrowDestroy() && !csItemHandler.isCreatedItem)
+                throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("動的アイテムのみ実行可能です。クラフトアイテムの場合は[CS Emulator Prefab Item]コンポーネントを付けてください。");
             itemDestroyer.Destroy(item);
+        }
+        bool arrowDestroy()
+        {
+            var prefabItem = gameObject.GetComponent<Components.CSEmulatorPrefabItem>();
+            if (prefabItem == null) return false;
+            var allow = prefabItem.allowDestroy;
+            return allow;
         }
 
         public ItemHandle[] getItemsNear(EmulateVector3 position, float radius)
@@ -970,6 +1004,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
         }
 
+        public void DischargeOperateLimit(double time)
+        {
+            createItemThrottle.Discharge(time);
+        }
+
         public void Shutdown()
         {
             updateListenerBinder.DeleteUpdateCallback(gameObject.name);
@@ -977,9 +1016,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             receiveListenerBinder.DeleteReceiveCallback(this.csItemHandler);
         }
 
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            o.angularVelocity = angularVelocity.clone();
+            o.state = new object();
+            o.useGravity = useGravity;
+            o.velocity = velocity.clone();
+            return o;
+        }
         public override string ToString()
         {
-            return String.Format("[ClusterScript][{0}]", gameObject.name);
+            return String.Format("[ClusterScript][{0}]", gameObject == null ? null : gameObject.name);
         }
 
     }

@@ -79,5 +79,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             audioSource.Stop();
         }
+
+        public object toJSON(string key)
+        {
+            return this;
+        }
+        public override string ToString()
+        {
+            var clip = itemAudioSet.AudioClip;
+            return String.Format("[ApiAudio][{0}:{1}]", itemAudioSet.Id, clip == null ? null : clip.name);
+        }
     }
 }

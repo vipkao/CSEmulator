@@ -23,6 +23,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPrefabItemHolder prefabItemHolder,
             IPlayerHandleHolder playerHandleHolder,
             IPlayerControllerFactory playerControllerFactory,
+            IItemExceptionFactory itemExceptionFactory,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -41,6 +42,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 prefabItemHolder,
                 playerHandleHolder,
                 playerControllerFactory,
+                itemExceptionFactory,
                 stateProxy,
                 logger
             );

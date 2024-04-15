@@ -120,11 +120,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             messageSender.Send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
         }
 
-        public override string ToString()
-        {
-            return string.Format("[ItemHandle][{0}][{1}]", csItemHandler.gameObjectName, id);
-        }
-
         void CheckOwnerDistanceLimit()
         {
             var p1 = csItemHandler.gameObject.transform.position;
@@ -155,5 +150,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 String.Format("[{0}]>>>[{1}]", csOwnerItemHandler, csItemHandler)
             );
         }
+
+        public object toJSON(string key)
+        {
+            dynamic o = new System.Dynamic.ExpandoObject();
+            o.id = id;
+            return o;
+        }
+        public override string ToString()
+        {
+            return string.Format("[ItemHandle][{0}][{1}]", csItemHandler == null ? "null" : csItemHandler.gameObjectName, id);
+        }
+
+
     }
 }

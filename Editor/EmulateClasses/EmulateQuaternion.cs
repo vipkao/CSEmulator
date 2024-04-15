@@ -143,6 +143,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return this;
         }
 
+        public object toJSON(string key)
+        {
+            return this;
+        }
         public override string ToString()
         {
             return String.Format("({0:f4},{1:f4},{2:f4},{3:f4})", x, y, z, w);
