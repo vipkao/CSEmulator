@@ -22,12 +22,12 @@ namespace Assets.KaomoLab.CSEmulator.Components
             this.parent = parent;
         }
 
+        //ここに機能を追加する場合の注意。
+        //このコンポーネントは、OverlapDetectorShapeが付いているSubNodeにしか追加されていない。
+
         private void OnTriggerEnter(Collider other)
         {
-            if (!OverlapManager.IsOverlapTarget(gameObject, other)) return;
-            var (itemHandler, playerHandler) = OverlapManager.GetHandler(other);
-
-            parent.SetSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
+            parent.SetSubNodeOverlap(gameObject, other);
         }
 
         private void OnTriggerStay(Collider other)
@@ -37,15 +37,10 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         private void OnTriggerExit(Collider other)
         {
-            if (!OverlapManager.IsOverlapTarget(gameObject, other)) return;
-            var (itemHandler, playerHandler) = OverlapManager.GetHandler(other);
-
-            parent.RemoveSubNodeOverlap(gameObject.name, itemHandler, playerHandler, other);
+            parent.RemoveSubNodeOverlap(gameObject, other);
         }
 
-        private void OnCollisionEnter(Collision collision)
-        {
-            parent.OnCollisionSubNode(gameObject.name, collision);
-        }
+        //ここに機能を追加する場合の注意。
+        //このコンポーネントは、OverlapDetectorShapeが付いているSubNodeにしか追加されていない。
     }
 }

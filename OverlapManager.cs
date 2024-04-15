@@ -13,6 +13,7 @@ namespace Assets.KaomoLab.CSEmulator
     {
         readonly GameObject gameObject;
 
+        readonly Dictionary<string, GameObject> subNodeGameObjects = new Dictionary<string, GameObject>();
         readonly Dictionary<string, Dictionary<int, (ITEM_HANDLER, Collider)>> subNodeItemOverlaps = new Dictionary<string, Dictionary<int, (ITEM_HANDLER, Collider)>>();
         readonly Dictionary<string, Dictionary<int, (PLAYER_HANDLER, Collider)>> subNodePlayerOverlaps = new Dictionary<string, Dictionary<int, (PLAYER_HANDLER, Collider)>>();
         readonly Dictionary<string, Dictionary<int, Collider>> subNodeColliderOverlaps = new Dictionary<string, Dictionary<int, Collider>>();
@@ -59,12 +60,16 @@ namespace Assets.KaomoLab.CSEmulator
         }
 
         public void SetSubNodeOverlap(
-            string name,
-            ITEM_HANDLER itemHandler,
-            PLAYER_HANDLER playerHandler,
+            GameObject gameObject,
             Collider collider
         )
         {
+            if (!IsOverlapTarget(gameObject, collider)) return;
+            var (itemHandler, playerHandler) = GetHandler(collider);
+            var name = gameObject.name;
+
+            if (!subNodeGameObjects.ContainsKey(name))
+                subNodeGameObjects[name] = gameObject;
             if (!subNodeItemOverlaps.ContainsKey(name))
                 subNodeItemOverlaps[name] = new Dictionary<int, (ITEM_HANDLER, Collider)>();
             if (!subNodePlayerOverlaps.ContainsKey(name))
@@ -83,12 +88,16 @@ namespace Assets.KaomoLab.CSEmulator
         }
 
         public void RemoveSubNodeOverlap(
-            string name,
-            ITEM_HANDLER itemHandler,
-            PLAYER_HANDLER playerHandler,
+            GameObject gameObject,
             Collider collider
         )
         {
+            if (!IsOverlapTarget(gameObject, collider)) return;
+            var (itemHandler, playerHandler) = GetHandler(collider);
+            var name = gameObject.name;
+
+            if (!subNodeGameObjects.ContainsKey(name))
+                subNodeGameObjects[name] = gameObject;
             if (!subNodeItemOverlaps.ContainsKey(name))
                 subNodeItemOverlaps[name] = new Dictionary<int, (ITEM_HANDLER, Collider)>();
             if (!subNodePlayerOverlaps.ContainsKey(name))
@@ -112,44 +121,47 @@ namespace Assets.KaomoLab.CSEmulator
             //リスト中のActiveを確認し必要に応じて削除する。という挙動がある模様。
             foreach (var key in itemOverlaps.Keys.ToArray())
             {
-                var g = itemOverlaps[key].Item2.gameObject;
-                if (g != null && g.activeInHierarchy) continue;
+                var c = itemOverlaps[key].Item2;
+                if (c != null && c.gameObject.activeInHierarchy) continue;
                 itemOverlaps.Remove(key);
             }
             foreach (var key in playerOverlaps.Keys.ToArray())
             {
                 //playerもこの判定でいいかはわからないけど、プレビュー上ならどうにでもできる
-                var g = playerOverlaps[key].Item2.gameObject;
-                if (g != null && g.activeInHierarchy) continue;
+                var c = playerOverlaps[key].Item2;
+                if (c != null && c.gameObject.activeInHierarchy) continue;
                 playerOverlaps.Remove(key);
             }
             foreach (var key in colliderOverlaps.Keys.ToArray())
             {
-                var g = colliderOverlaps[key].gameObject;
-                if (g != null && g.activeInHierarchy) continue;
+                var c = colliderOverlaps[key];
+                if (c != null && c.gameObject.activeInHierarchy) continue;
                 colliderOverlaps.Remove(key);
             }
 
             foreach (var name in subNodeItemOverlaps.Keys)
                 foreach (var key in subNodeItemOverlaps[name].Keys.ToArray())
                 {
-                    var g = subNodeItemOverlaps[name][key].Item2.gameObject;
-                    if (g != null && g.activeInHierarchy) continue;
+                    var s = subNodeGameObjects[name];
+                    var c = subNodeItemOverlaps[name][key].Item2;
+                    if (s.activeInHierarchy && c != null && c.gameObject.activeInHierarchy) continue;
                     subNodeItemOverlaps[name].Remove(key);
                 }
             foreach (var name in subNodePlayerOverlaps.Keys)
                 foreach (var key in subNodePlayerOverlaps[name].Keys.ToArray())
                 {
                     //playerもこの判定でいいかはわからないけど、プレビュー上ならどうにでもできる
-                    var g = subNodePlayerOverlaps[name][key].Item2.gameObject;
-                    if (g != null && g.activeInHierarchy) continue;
+                    var s = subNodeGameObjects[name];
+                    var c = subNodePlayerOverlaps[name][key].Item2;
+                    if (s.activeInHierarchy && c != null && c.gameObject.activeInHierarchy) continue;
                     subNodePlayerOverlaps[name].Remove(key);
                 }
             foreach (var name in subNodeColliderOverlaps.Keys)
                 foreach (var key in subNodeColliderOverlaps[name].Keys.ToArray())
                 {
-                    var g = subNodeColliderOverlaps[name][key].gameObject;
-                    if (g != null && g.activeInHierarchy) continue;
+                    var s = subNodeGameObjects[name];
+                    var c = subNodeColliderOverlaps[name][key];
+                    if (s.activeInHierarchy && c != null && c.gameObject.activeInHierarchy) continue;
                     subNodeColliderOverlaps[name].Remove(key);
                 }
         }

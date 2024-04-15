@@ -12,7 +12,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         : MonoBehaviour
     {
         public event KaomoLab.CSEmulator.Handler OnFixedUpdate = delegate { };
-        public event KaomoLab.CSEmulator.Handler<string, Collision> OnCollision = delegate { };
+        public event KaomoLab.CSEmulator.Handler<Collision> OnCollision = delegate { };
 
         public ClusterVR.CreatorKit.Item.IItem item
         {
@@ -127,33 +127,24 @@ namespace Assets.KaomoLab.CSEmulator.Components
         }
 
         public void SetSubNodeOverlap(
-            string name,
-            CSEmulatorItemHandler itemHandler,
-            CSEmulatorPlayerHandler playerHandler,
+            GameObject gameObject,
             Collider collider
         )
         {
-            overlapManager.SetSubNodeOverlap(name, itemHandler, playerHandler, collider);
+            overlapManager.SetSubNodeOverlap(gameObject, collider);
         }
         public void RemoveSubNodeOverlap(
-            string name,
-            CSEmulatorItemHandler itemHandler,
-            CSEmulatorPlayerHandler playerHandler,
+            GameObject gameObject,
             Collider collider
         )
         {
-            overlapManager.RemoveSubNodeOverlap(name, itemHandler, playerHandler, collider);
+            overlapManager.RemoveSubNodeOverlap(gameObject, collider);
         }
 
 
         private void OnCollisionEnter(Collision collision)
         {
-            OnCollision.Invoke("", collision);
-        }
-
-        public void OnCollisionSubNode(string name, Collision collision)
-        {
-            OnCollision.Invoke(name, collision);
+            OnCollision.Invoke(collision);
         }
 
         ClusterVR.CreatorKit.Item.IItem GetItem()

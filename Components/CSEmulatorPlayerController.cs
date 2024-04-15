@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Assets.KaomoLab.CSEmulator.Components
 {
-    [DisallowMultipleComponent, RequireComponent(typeof(IPlayerController))]
+    [DisallowMultipleComponent, RequireComponent(typeof(IPlayerController)), RequireComponent(typeof(CharacterController))]
     public class CSEmulatorPlayerController
         : MonoBehaviour
     {
@@ -75,6 +75,31 @@ namespace Assets.KaomoLab.CSEmulator.Components
             perspectiveChangeNotifier.OnChanged += PerspectiveChangeNotifier_OnValueChanged;
             perspectiveChangeNotifier.RequestNotify();
             this.rawInput = rawInput;
+
+            //slopeLimitとstepOffsetの挙動を見ると
+            //CharacterControllerとRigidbody(+CapsuleCollider)の併用は
+            //ほぼ間違いないように思える
+            AddCapsuleCollider();
+        }
+        private void AddCapsuleCollider()
+        {
+            var cc = GetComponent<CharacterController>();
+            //Colliderが2つになる…
+            //＞getOverlapsは、今(cluster2.95)のところ2つ返すのでOK。
+            //＞getPlayersNearは、1つしか返さないので要調整。
+            var col = gameObject.AddComponent<CapsuleCollider>();
+            col.center = cc.center;
+            //cc側に衝突処理を持っていかれることがあるので+0.01
+            //skinWidthより小さい値にしたのが良かったのかもしれない(未検証)
+            col.height = cc.height + 0.01f;
+            col.radius = cc.radius + 0.01f;
+            var rb = gameObject.AddComponent<Rigidbody>();
+            //この辺の設定をしておくとccと併用できそう
+            rb.useGravity = false;
+            rb.mass = 0;
+            rb.drag = 0;
+            rb.angularDrag = 0;
+            rb.constraints = RigidbodyConstraints.FreezeAll;
         }
 
         private void PerspectiveChangeNotifier_OnValueChanged(bool data)

@@ -439,12 +439,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             OnCollideHandler = Callback;
         }
-        private void CsItemHandler_OnCollision(string name, UnityEngine.Collision data)
+        private void CsItemHandler_OnCollision(UnityEngine.Collision data)
         {
-            //動いていないColliderにキャラがぶつかりに行ってもOnCollisionが発生しないという問題は
-            //既知の問題としてあるらしく、ひとまずはＯＫとする。
-            //どうやらキャラ側のHitが来た後にめり込み修正が入り、
-            //OnCollisionが発生しない可能性があるらしい。
+            //親でも子でもなくItem本体に付いているか(2.95検証)
+            var rigid = gameObject.GetComponent<Rigidbody>();
+            if (rigid == null) return;
+
+            //kinematicはNG（2.95検証）
+            if (rigid.isKinematic) return;
+
             var points = data.contacts.Select(c =>
             {
                 var point = new CollidePoint(
@@ -452,11 +455,16 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                         new EmulateVector3(c.normal),
                         new EmulateVector3(c.point)
                     ),
-                    name == "" ? this : subNode(name)
-                );
+                    gameObject.GetInstanceID() == c.thisCollider.gameObject.GetInstanceID()
+                        ? this
+                        : subNode(c.thisCollider.gameObject.name)
+                ); ;
                 return point;
             });
-            var hitObject = GameObjectToHitObject(data.collider.gameObject);
+            //よくわからないけどRigidbodyが入っている場合はそちらが優先される仕様の模様？(2.95)
+            var hitObject = GameObjectToHitObject(
+                data.rigidbody?.gameObject ?? data.collider.gameObject
+            );
             var collision = new Collision(
                 points,
                 new EmulateVector3(data.impulse),
@@ -699,7 +707,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             //SubNodeにあたることを考えてInParent。Mainの方にあたっても反応する。
             var csItemHandler = gameObject.GetComponentInParent<Components.CSEmulatorItemHandler>();
-            var csPlayerHandler = gameObject.GetComponentInParent<Components.CSEmulatorPlayerHandler>();
+            //DesktopPlayerControllerにhitするのでchild
+            var csPlayerHandler = gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>();
             var hitObject = HitObject.Create(
                 csItemHandler, this.csItemHandler, csPlayerHandler, playerControllerFactory ,messageSender
             );
