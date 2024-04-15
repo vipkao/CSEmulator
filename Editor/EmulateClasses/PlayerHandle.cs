@@ -235,7 +235,10 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             PostProcessEffects effects
         )
         {
-            if(effects != null)
+            CheckOwnerOperationLimit();
+            CheckOwnerDistanceLimit();
+
+            if (effects != null)
             {
                 postEffectApplier.Apply(effects.bloom);
                 postEffectApplier.Apply(effects.chromaticAberration);

@@ -72,16 +72,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             postProcessVolume.priority = 100;
             //プロファイルは実行時に変更するとロールバックされないのでCreateInstanceで追加
             var postProcessProfile = ScriptableObject.CreateInstance<UnityEngine.Rendering.PostProcessing.PostProcessProfile>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Bloom>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ChromaticAberration>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ColorGrading>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.DepthOfField>();
+            //activeだと未設定でも有効になる効果がある(DepthOfFieldとか)のでfalse指定をしている。
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Bloom>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ChromaticAberration>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ColorGrading>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.DepthOfField>().active = false;
             //FogはRenderSettings？
             //RenderSettingsは実行時に上書きするとロールバックされるのでそのままいじってよし
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Grain>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.LensDistortion>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.MotionBlur>();
-            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Vignette>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Grain>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.LensDistortion>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.MotionBlur>().active = false;
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Vignette>().active = false;
             postProcessVolume.profile = postProcessProfile;
         }
 
