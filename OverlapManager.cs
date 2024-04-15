@@ -53,7 +53,22 @@ namespace Assets.KaomoLab.CSEmulator
             if (itemHandler != null)
                 itemOverlaps.Remove(collider.GetInstanceID());
             if (playerHandler != null)
+            {
                 playerOverlaps.Remove(collider.GetInstanceID());
+                //playerがワープすると１つ残るので同じplayerの場合に削除をするようにしている（SubNode側も）
+                //こういう解決でいいか分からない
+                //シングルなので上手くいっているけど、マルチにしたときは想定してない
+                var otherIDs = new List<int>();
+                foreach(var kv in playerOverlaps)
+                {
+                    var p = kv.Value.Item1;
+                    if (p == playerHandler) otherIDs.Add(kv.Key);
+                }
+                foreach(var otherID in otherIDs)
+                {
+                    playerOverlaps.Remove(otherID);
+                }
+            }
             if (IsOverlapCollider(itemHandler, playerHandler))
                 colliderOverlaps.Remove(collider.GetInstanceID());
 
@@ -109,7 +124,19 @@ namespace Assets.KaomoLab.CSEmulator
                 subNodeItemOverlaps[name].Remove(collider.GetInstanceID());
 
             if (playerHandler != null)
+            {
                 subNodePlayerOverlaps[name].Remove(collider.GetInstanceID());
+                var otherIDs = new List<int>();
+                foreach (var kv in subNodePlayerOverlaps[name])
+                {
+                    var p = kv.Value.Item1;
+                    if (p == playerHandler) otherIDs.Add(kv.Key);
+                }
+                foreach (var otherID in otherIDs)
+                {
+                    subNodePlayerOverlaps[name].Remove(otherID);
+                }
+            }
 
             if (collider != null)
                 subNodeColliderOverlaps[name].Remove(collider.GetInstanceID());

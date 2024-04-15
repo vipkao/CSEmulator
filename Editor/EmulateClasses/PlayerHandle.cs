@@ -271,6 +271,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             dynamic o = new System.Dynamic.ExpandoObject();
             o.id = id;
+            o.userId = userId;
+            o.userDisplayName = userDisplayName;
             return o;
         }
         public override string ToString()

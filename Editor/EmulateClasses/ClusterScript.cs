@@ -129,7 +129,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             get => new ItemHandle(csItemHandler, this.csItemHandler, messageSender);
         }
 
-        public ItemTemplateId ItemTemplateId
+        public ItemTemplateId itemTemplateId
         {
             get
             {
@@ -761,6 +761,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             o.state = new object();
             o.useGravity = useGravity;
             o.velocity = velocity.clone();
+            o.id = id;
+            o.itemHandle = itemHandle;
+            o.itemTemplateId = itemTemplateId;
             return o;
         }
         public override string ToString()
