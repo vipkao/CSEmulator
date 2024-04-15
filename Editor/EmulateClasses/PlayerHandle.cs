@@ -171,7 +171,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         }
 
         public void setHumanoidPose(
-            HumanoidPose pose
+            HumanoidPose pose,
+            SetHumanoidPoseOption setHumanoidPoseOption = null
         )
         {
             CheckOwnerOperationLimit();
