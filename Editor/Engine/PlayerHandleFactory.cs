@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using static UnityEngine.UI.GridLayoutGroup;
 
 namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 {
@@ -15,16 +14,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
         readonly IUserInterfaceHandler userInterfaceHandler;
         readonly ITextInputSender textInputSender;
+        readonly FogSettingsBridge fogSettingsBridge;
         readonly ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager;
 
         public PlayerHandleFactory(
             IUserInterfaceHandler userInterfaceHandler,
             ITextInputSender textInputSender,
+            FogSettingsBridge fogSettingsBridge,
             ClusterVR.CreatorKit.Editor.Preview.World.SpawnPointManager spawnPointManager
         )
         {
             this.userInterfaceHandler = userInterfaceHandler;
             this.textInputSender = textInputSender;
+            this.fogSettingsBridge = fogSettingsBridge;
             this.spawnPointManager = spawnPointManager;
         }
 
@@ -41,8 +43,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 csPlayerHandler, csPlayerController, desktopPlayerController, spawnPointManager
             );
 
+            //VrmPrepare側での設定をここで意識する必要があるのはどうにもよくないと思うけど
+            //いいアイデアが出るか、困った事になるまではこれで行く
+            var postProcessApplier = new PostProcessApplier(
+                csPlayerHandler.gameObject.transform.parent.parent.parent.gameObject,
+                fogSettingsBridge
+            );
+
             var handle = new PlayerHandle(
-                playerMeta, playerController, userInterfaceHandler, textInputSender, csOwnerItemHandler
+                playerMeta, playerController, userInterfaceHandler, textInputSender, postProcessApplier, csOwnerItemHandler
             );
             return handle;
         }

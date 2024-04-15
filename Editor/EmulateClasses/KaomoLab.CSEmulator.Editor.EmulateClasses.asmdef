@@ -22,7 +22,8 @@
         "ClusterVR.CreatorKit.World",
         "KaomoLab.CSEmulator.Editor",
         "KaomoLab.CSEmulator.Components",
-        "KaomoLab.CSEmulator"
+        "KaomoLab.CSEmulator",
+        "Unity.Postprocessing.Runtime"
     ],
     "includePlatforms": [
         "Editor"

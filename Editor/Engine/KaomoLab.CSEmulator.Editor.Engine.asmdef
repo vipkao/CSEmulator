@@ -23,7 +23,8 @@
         "KaomoLab.CSEmulator.Editor.EmulateClasses",
         "KaomoLab.CSEmulator.Components",
         "KaomoLab.CSEmulator.UIs",
-        "VRM"
+        "VRM",
+        "Unity.Postprocessing.Runtime"
     ],
     "includePlatforms": [
         "Editor"

@@ -18,6 +18,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         readonly TextInputRouter textInputRouter;
         readonly PlayerHandleFactory playerHandleFactory;
         readonly UserInterfacePreparer userInterfacePreparer;
+        readonly FogSettingsBridge fogSettingsBridge;
         readonly OptionBridge optionBridge;
 
         List<CodeRunner> codeRunners = new List<CodeRunner>();
@@ -51,8 +52,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             userInterfacePreparer = new UserInterfacePreparer(
                 previewFinder
             );
+            fogSettingsBridge = new FogSettingsBridge();
             playerHandleFactory = new PlayerHandleFactory(
-                userInterfacePreparer, textInputRouter, spawnPointManager
+                userInterfacePreparer, textInputRouter, fogSettingsBridge, spawnPointManager
             );
             this.optionBridge = optionBridge;
 
@@ -89,6 +91,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             //しかし複数プレイヤーを考えるとこれは雑なのでそのうち何とかする。
             vrm = vrmPreparer.InstantiateVrm();
             playerHandleFactory.AddPlayer(vrm, optionBridge);
+
+            fogSettingsBridge.Start();
 
             //各種コンポーネントを付けてから実行した方がいい気がする。
             var newRunners = itemCollector

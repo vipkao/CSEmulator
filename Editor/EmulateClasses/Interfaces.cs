@@ -102,6 +102,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void StartTextInput(string caption, Action<string> SendCallback, Action CancelCallback, Action BusyCallback);
     }
 
+    public interface IPostProcessApplier
+    {
+        void Apply(BloomSettings settings);
+        void Apply(ChromaticAberrationSettings settings);
+        void Apply(ColorGradingSettings settings);
+        void Apply(DepthOfFieldSettings settings);
+        void Apply(FogSettings settings);
+        void Apply(GrainSettings settings);
+        void Apply(LensDistortionSettings settings);
+        void Apply(MotionBlurSettings settings);
+        void Apply(VignetteSettings settings);
+    }
+
     public interface ITextInputListenerBinder
     {
         void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, string, TextInputStatus> Callback);

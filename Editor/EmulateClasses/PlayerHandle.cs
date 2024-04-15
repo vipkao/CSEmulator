@@ -14,6 +14,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IPlayerController playerController;
         readonly IUserInterfaceHandler userInterfaceHandler;
         readonly ITextInputSender textInputSender;
+        readonly IPostProcessApplier postEffectApplier;
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
 
@@ -23,6 +24,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPlayerController playerController,
             IUserInterfaceHandler userInterfaceHandler,
             ITextInputSender textInputSender,
+            IPostProcessApplier postEffectApplier,
             Components.CSEmulatorItemHandler csOwnerItemHandler
         )
         {
@@ -30,6 +32,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.playerController = playerController;
             this.userInterfaceHandler = userInterfaceHandler;
             this.textInputSender = textInputSender;
+            this.postEffectApplier = postEffectApplier;
             this.csOwnerItemHandler = csOwnerItemHandler;
         }
         public PlayerHandle(
@@ -226,6 +229,36 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CheckOwnerDistanceLimit();
 
             playerController.SetPosition(position._ToUnityEngine());
+        }
+
+        public void setPostProcessEffects(
+            PostProcessEffects effects
+        )
+        {
+            if(effects != null)
+            {
+                postEffectApplier.Apply(effects.bloom);
+                postEffectApplier.Apply(effects.chromaticAberration);
+                postEffectApplier.Apply(effects.colorGrading);
+                postEffectApplier.Apply(effects.depthOfField);
+                postEffectApplier.Apply(effects.fog);
+                postEffectApplier.Apply(effects.grain);
+                postEffectApplier.Apply(effects.lensDistortion);
+                postEffectApplier.Apply(effects.motionBlur);
+                postEffectApplier.Apply(effects.vignette);
+            }
+            else
+            {
+                postEffectApplier.Apply(new BloomSettings());
+                postEffectApplier.Apply(new ChromaticAberrationSettings());
+                postEffectApplier.Apply(new ColorGradingSettings());
+                postEffectApplier.Apply(new DepthOfFieldSettings());
+                postEffectApplier.Apply(new FogSettings());
+                postEffectApplier.Apply(new GrainSettings());
+                postEffectApplier.Apply(new LensDistortionSettings());
+                postEffectApplier.Apply(new MotionBlurSettings());
+                postEffectApplier.Apply(new VignetteSettings());
+            }
         }
 
         public void setRotation(

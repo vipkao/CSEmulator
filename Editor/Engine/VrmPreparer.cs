@@ -57,7 +57,32 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             //ポーズをA-Poseにする。アニメーション来たら多分不要。
             ResetAPose(csPlayerController);
 
+            BuildPostProcess(previewFinder.previewRoot);
+
             return vrmInstance;
+        }
+
+        void BuildPostProcess(GameObject root)
+        {
+            var postProcessObject = new GameObject("CSEmulatorPostProcess");
+            postProcessObject.layer = 21;
+            postProcessObject.transform.parent = root.transform;
+            var postProcessVolume = postProcessObject.AddComponent<UnityEngine.Rendering.PostProcessing.PostProcessVolume>();
+            postProcessVolume.isGlobal = true;
+            postProcessVolume.priority = 100;
+            //プロファイルは実行時に変更するとロールバックされないのでCreateInstanceで追加
+            var postProcessProfile = ScriptableObject.CreateInstance<UnityEngine.Rendering.PostProcessing.PostProcessProfile>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Bloom>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ChromaticAberration>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.ColorGrading>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.DepthOfField>();
+            //FogはRenderSettings？
+            //RenderSettingsは実行時に上書きするとロールバックされるのでそのままいじってよし
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Grain>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.LensDistortion>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.MotionBlur>();
+            postProcessProfile.AddSettings<UnityEngine.Rendering.PostProcessing.Vignette>();
+            postProcessVolume.profile = postProcessProfile;
         }
 
         void ResetAPose(Components.CSEmulatorPlayerController csPlayerController)

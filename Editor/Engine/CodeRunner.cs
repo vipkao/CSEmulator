@@ -126,6 +126,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             SetClass<EmulateClasses.TextAlignment>(engine, "TextAlignment");
             SetClass<EmulateClasses.TextAnchor>(engine, "TextAnchor");
             SetClass<EmulateClasses.TextInputStatus>(engine, "TextInputStatus");
+            SetClass<EmulateClasses.PostProcessEffects>(engine, "PostProcessEffects");
             engine.SetValue("ClusterScriptError", exceptionFactory.clusterScriptErrorConstructor);
 
             try
