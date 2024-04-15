@@ -184,6 +184,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         ICckComponentFacade Create(UnityEngine.GameObject gameObject);
     }
 
+    public interface IMaterialSubstituter
+    {
+        UnityEngine.Material Prepare(UnityEngine.Material material);
+        void Destroy();
+    }
+
     public interface ISendableSize
     {
         int GetSize();

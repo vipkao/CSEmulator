@@ -96,6 +96,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 logger
             );
 
+            var materialSubstituer = new MaterialSubstituter(
+            );
+
             var clusterScript = new EmulateClasses.ClusterScript(
                 gameObject,
                 cckComponentFacadeFactory,
@@ -110,6 +113,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 playerHandleFactory,
                 exceptionFactory,
                 externalHttpCaller,
+                materialSubstituer,
                 stateProxy,
                 logger
             );

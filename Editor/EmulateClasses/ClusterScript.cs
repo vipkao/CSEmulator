@@ -28,6 +28,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IProgramStatus programStatus;
         readonly IItemExceptionFactory itemExceptionFactory;
         readonly IExternalCaller externalCaller;
+        readonly IMaterialSubstituter materialSubstituter;
         readonly StateProxy stateProxy;
         readonly ILogger logger;
 
@@ -67,6 +68,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IPlayerHandleFactory playerHandleFactory,
             IItemExceptionFactory itemExceptionFactory,
             IExternalCaller externalCaller,
+            IMaterialSubstituter materialSubstituer,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -84,6 +86,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.playerHandleFactory = playerHandleFactory;
             this.itemExceptionFactory = itemExceptionFactory;
             this.externalCaller = externalCaller;
+            this.materialSubstituter = materialSubstituer;
             this.stateProxy = stateProxy;
             this.logger = logger;
 
@@ -457,6 +460,39 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
         }
 
+        public MaterialHandle material(string materialId)
+        {
+            var itemMaterialSetList = gameObject.GetComponent<ClusterVR.CreatorKit.Item.IItemMaterialSetList>();
+            if (itemMaterialSetList == null)
+            {
+                logger.Warning("ItemMaterialSetListが指定されていません。");
+                return new MaterialHandle(null, itemExceptionFactory);
+            }
+            var set = itemMaterialSetList.ItemMaterialSets.FirstOrDefault(set => set.Id == materialId);
+            if (set.Material == null)
+            {
+                logger.Warning(String.Format("materialId:{0}がありません。", materialId));
+                return new MaterialHandle(null, itemExceptionFactory);
+            }
+
+            //アイテム毎にMaterialを複製して使用するような動きの模様
+            var renderers = gameObject.GetComponentsInChildren<Renderer>();
+            var prepared = materialSubstituter.Prepare(set.Material);
+            foreach (var renderer in renderers)
+            {
+                var materials = renderer.sharedMaterials;
+                for (var i = 0; i < materials.Length; i++)
+                {
+                    if (materials[i].GetInstanceID() != set.Material.GetInstanceID()) continue;
+                    materials[i] = prepared;
+                }
+                renderer.sharedMaterials = materials;
+            }
+
+            var ret = new MaterialHandle(prepared, itemExceptionFactory);
+            return ret;
+        }
+
         public void onCollide(Action<Collision> Callback)
         {
             OnCollideHandler = Callback;
@@ -780,6 +816,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             fixedUpdateListenerBinder.DeleteUpdateCallback(gameObject.name);
             receiveListenerBinder.DeleteReceiveCallback(this.csItemHandler);
             textInputListenerBinder.DeleteReceiveCallback(this.csItemHandler);
+            //プロファイラを見てるとPlayModeを抜ける時に破棄されているようだけど念のため
+            materialSubstituter.Destroy();
         }
 
         public object toJSON(string key)
