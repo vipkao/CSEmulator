@@ -17,6 +17,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly GameObject gameObject;
         readonly ICckComponentFacade cckComponentFacade;
         readonly IItemLifecycler itemLifecycler;
+        readonly IStartListenerBinder startListenerBinder;
         readonly IUpdateListenerBinder updateListenerBinder;
         readonly IUpdateListenerBinder fixedUpdateListenerBinder;
         readonly IReceiveListenerBinder receiveListenerBinder;
@@ -56,6 +57,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             GameObject gameObject,
             ICckComponentFacadeFactory cckComponentFacadeFactory,
             IItemLifecycler itemLifecycler,
+            IStartListenerBinder startListenerBinder,
             IUpdateListenerBinder updateListenerBinder,
             IUpdateListenerBinder fixedUpdateListenerBinder,
             IReceiveListenerBinder receiveListenerBinder,
@@ -72,6 +74,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.gameObject = gameObject;
             this.cckComponentFacade = cckComponentFacadeFactory.Create(gameObject);
             this.itemLifecycler = itemLifecycler;
+            this.startListenerBinder = startListenerBinder;
             this.updateListenerBinder = updateListenerBinder;
             this.fixedUpdateListenerBinder = fixedUpdateListenerBinder;
             this.receiveListenerBinder = receiveListenerBinder;
@@ -573,6 +576,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
         }
 
+        public void onStart(Action Callback)
+        {
+            startListenerBinder.SetUpdateCallback(Callback);
+        }
+
         public void onTextInput(Action<string, string, TextInputStatus> Callback)
         {
             textInputListenerBinder.SetReceiveCallback(this.csItemHandler, Callback);
@@ -748,6 +756,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void Shutdown()
         {
+            startListenerBinder.DeleteStartCallback();
             updateListenerBinder.DeleteUpdateCallback(gameObject.name);
             fixedUpdateListenerBinder.DeleteUpdateCallback(gameObject.name);
             receiveListenerBinder.DeleteReceiveCallback(this.csItemHandler);

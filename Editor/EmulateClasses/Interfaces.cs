@@ -20,6 +20,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner);
     }
 
+    public interface IStartListenerBinder
+    {
+        void SetUpdateCallback(Action Callback);
+        void DeleteStartCallback();
+    }
+
     public interface IMessageSender
     {
         void Send(ulong id, string requestName, object arg, Components.CSEmulatorItemHandler sender);

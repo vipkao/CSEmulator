@@ -21,6 +21,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly ILoggerFactory loggerFactory;
 
         readonly EmulateClasses.StateProxy stateProxy;
+        readonly OnStartInvoker onStartInvoker;
         readonly OnUpdateBridge onUpdateBridge;
         readonly OnUpdateBridge onFixedUpdateBridge;
         readonly CckComponentFacadeFactory cckComponentFacadeFactory;
@@ -50,6 +51,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.loggerFactory = loggerFactory;
 
             code = scriptableItem.GetSourceCode(true);
+
+            onStartInvoker = new OnStartInvoker();
 
             //キーはGameObjectのnameで行っている(v1を使いまわしている)ので、Item間での使いまわしは不可。
             //そのためここで各Item用にインスタンスを作っている。
@@ -97,6 +100,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 gameObject,
                 cckComponentFacadeFactory,
                 itemLifecycler,
+                onStartInvoker,
                 onUpdateBridge,
                 onFixedUpdateBridge,
                 itemMessageRouter,
@@ -174,6 +178,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         public void Update()
         {
             if (!isRunning) return;
+            //Start>Updateの順で実行される模様 2.7.0.2調査
+            onStartInvoker.InvokeStart();
             onUpdateBridge.InvokeUpdate();
         }
 
