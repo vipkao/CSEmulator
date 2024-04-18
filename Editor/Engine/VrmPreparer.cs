@@ -12,22 +12,29 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly CckPreviewFinder previewFinder;
         readonly GameObject vrm;
         readonly Components.IPerspectiveChangeNotifier perspectiveChangeNotifier;
+        readonly Components.IPlayerMeasurementsHolder playerMeasurementsHolder;
 
         public VrmPreparer(
             CckPreviewFinder previewFinder,
             GameObject vrm,
-            Components.IPerspectiveChangeNotifier perspectiveChangeNotifier
+            Components.IPerspectiveChangeNotifier perspectiveChangeNotifier,
+            Components.IPlayerMeasurementsHolder playerMeasurementsHolder
         )
         {
             this.previewFinder = previewFinder;
             this.vrm = vrm;
             this.perspectiveChangeNotifier = perspectiveChangeNotifier;
+            this.playerMeasurementsHolder = playerMeasurementsHolder;
         }
 
         public GameObject InstantiateVrm()
         {
             //挙動的にRootの下がよさそう
             var vrmInstance = GameObject.Instantiate(vrm, previewFinder.controllerRoot.transform);
+
+            //VenueLayer系衝突判定用のコライダー
+            var avatarCollider = vrmInstance.AddComponent<CapsuleCollider>();
+            vrmInstance.layer = 16; //OwnAvatar
 
             //プレビューのカメラに映ってしまうので
             var renderers = vrmInstance.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -58,6 +65,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 desktopPlayerControllerReflector,
                 desktopPlayerControllerReflector,
                 perspectiveChangeNotifier,
+                playerMeasurementsHolder,
                 new Implements.UnityKeyInput()
             );
 
@@ -65,6 +73,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             ResetAPose(csPlayerController);
 
             BuildPostProcess(previewFinder.previewRoot);
+
+            AddjustAvatarCollider(avatarCollider, characterController);
 
             return vrmInstance;
         }
@@ -105,5 +115,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             poseHandler.SetHumanPose(ref humanPose);
         }
 
+        void AddjustAvatarCollider(CapsuleCollider avatarCollider, CharacterController source)
+        {
+            avatarCollider.center = source.center;
+            avatarCollider.height = source.height + 0.01f;
+            avatarCollider.radius = source.radius + 0.01f;
+        }
     }
 }

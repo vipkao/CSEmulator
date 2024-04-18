@@ -95,6 +95,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             get => PlayerPrefs.GetInt(PrefsKeyExists, 1) == 1;
             set => PlayerPrefs.SetInt(PrefsKeyExists, value ? 1 : 0);
         }
+        const string PrefsKeyPlayerColliderRadius = "KaomoCSEmulator_playerColliderRadius";
+        public readonly float DefaultPlayerColliderRadius = 0.2f; //PreviewOnlyの値
+        public float playerColliderRadius
+        {
+            get => PlayerPrefs.GetFloat(PrefsKeyPlayerColliderRadius, DefaultPlayerColliderRadius);
+            set => PlayerPrefs.SetFloat(PrefsKeyPlayerColliderRadius, value);
+        }
 
         const string PrefsKeyCallExternalUrl = "KaomoCSEmulator_callExternalUrl";
         public string callExternalUrl

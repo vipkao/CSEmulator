@@ -24,6 +24,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         public bool exists => raw.exists;
 
+        public IPlayerMeasurementsHolder playerMeasurementsHolder { get; private set; }
+
         public class ExternalCallerOptions : IExternalCallerOptions
         {
             public event Handler OnChangeLimit = delegate { };
@@ -39,12 +41,27 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             public EmulateClasses.CallExternalRateLimit rateLimit => options.limitExternalCall;
         }
 
+        public class PlayerMeasurementsHolder : IPlayerMeasurementsHolder
+        {
+            public float height => ClusterVR.CreatorKit.Preview.PlayerController.CameraControlSettings.StandingEyeHeight;
+            public float radius => options.playerColliderRadius;
+
+            readonly EmulatorOptions options;
+            public PlayerMeasurementsHolder(
+                EmulatorOptions options
+            )
+            {
+                this.options = options;
+            }
+        }
+
         public OptionBridge(
             EmulatorOptions options
         )
         {
             this.raw = options;
             this.externalCallerOptions = new ExternalCallerOptions(options);
+            this.playerMeasurementsHolder = new PlayerMeasurementsHolder(options);
             options.OnChangedPerspective += Options_OnChangedPerspective;
         }
 

@@ -83,7 +83,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             }
             if(op.userId == "")
                 op.userId = op.DefaultUserId;
-            op.userName = EditorGUILayout.TextField(new GUIContent("　.userDisplayName", "\"PlayerHandle.userDisplayNameの値を指定できます。"), op.userName);
+            op.userName = EditorGUILayout.TextField(new GUIContent("　.userDisplayName", "PlayerHandle.userDisplayNameの値を指定できます。"), op.userName);
             if (op.userName == "")
                 op.userName = op.DefaultUserName;
             EditorGUILayout.Separator();
@@ -101,6 +101,25 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
                     "VRMのPrefabを指定してください。", MessageType.Error
                 );
             }
+            EditorGUILayout.LabelField(new GUIContent("アバターのコライダーサイズ", "アバターのカプセル状のコライダーが以下の設定に合わせリサイズされます。"));
+            op.playerColliderRadius = EditorGUILayout.FloatField(new GUIContent("　半径", "CapsuleColliderの半径です。"), op.playerColliderRadius);
+            if(op.playerColliderRadius <= 0)
+            {
+                op.playerColliderRadius = op.DefaultPlayerColliderRadius;
+            }
+            EditorGUILayout.BeginHorizontal();
+            {
+                EditorGUILayout.LabelField(new GUIContent("　高さ", "CapsuleColliderの高さです。\nPreviewSettingsの視点の高さ(立ち)を参照します。"), GUILayout.Width(148));
+                EditorGUILayout.TextField(
+                    ClusterVR.CreatorKit.Preview.PlayerController.CameraControlSettings.StandingEyeHeight.ToString(),
+                    EditorStyles.textField
+                );
+                if (GUILayout.Button("変更はこちら"))
+                {
+                    ClusterVR.CreatorKit.Editor.Preview.EditorUI.SettingsWindow.ShowWindow();
+                }
+            }
+            EditorGUILayout.EndHorizontal();
             op.debug = EditorGUILayout.Toggle("デバッグモードで実行する。", op.debug);
             EditorGUILayout.LabelField("　動作が遅くなりますが、ログ出力が詳細になります。");
 

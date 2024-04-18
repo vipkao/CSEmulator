@@ -29,4 +29,9 @@ namespace Assets.KaomoLab.CSEmulator.Components
         public bool isGrounded { get; }
         public void Move(UnityEngine.Vector3 motion);
     }
+    public interface IPlayerMeasurementsHolder
+    {
+        public float height { get; }
+        public float radius { get; }
+    }
 }

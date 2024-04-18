@@ -98,6 +98,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             return csItemHandler.Exists();
         }
 
+        public void send(string requestName, Jint.Native.JsValue arg)
+        {
+            //CCK2.11.0現在 sendにundefinedを入れると動かない。
+            //CSETODO 単にreturnではなく親切にメッセージを出したい。
+            if (arg is Jint.Native.JsUndefined) return;
+
+            var obj = arg.ToObject();
+            send(requestName, obj);
+        }
         public void send(string requestName, object arg)
         {
             //CSETODO 単にreturnではなく親切にメッセージを出したい。

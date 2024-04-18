@@ -72,6 +72,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         IBaseMoveSpeedHolder cckPlayerBaseMoveSpeed;
         IPlayerRotateHolder playerRotateHolder;
         IPerspectiveChangeNotifier perspectiveChangeNotifier;
+        IPlayerMeasurementsHolder playerMeasurementsHolder;
         IRawInput rawInput;
 
         public void Construct(
@@ -82,6 +83,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             IBaseMoveSpeedHolder cckPlayerBaseMoveSpeed,
             IPlayerRotateHolder playerRotateHolder,
             IPerspectiveChangeNotifier perspectiveChangeNotifier,
+            IPlayerMeasurementsHolder playerMeasurementsHolder,
             IRawInput rawInput
         )
         {
@@ -115,7 +117,10 @@ namespace Assets.KaomoLab.CSEmulator.Components
             this.perspectiveChangeNotifier = perspectiveChangeNotifier;
             perspectiveChangeNotifier.OnChanged += PerspectiveChangeNotifier_OnValueChanged;
             perspectiveChangeNotifier.RequestNotify();
+            this.playerMeasurementsHolder = playerMeasurementsHolder;
             this.rawInput = rawInput;
+
+            ApplyCharacterController();
 
             //slopeLimitとstepOffsetの挙動を見ると
             //CharacterControllerとRigidbody(+CapsuleCollider)の併用は
@@ -127,6 +132,13 @@ namespace Assets.KaomoLab.CSEmulator.Components
                 GetComponent<CharacterController>(),
                 playerRotateHolder.rotateTransform
             );
+        }
+        private void ApplyCharacterController()
+        {
+            var cc = GetComponent<CharacterController>();
+            cc.height = playerMeasurementsHolder.height;
+            cc.radius = playerMeasurementsHolder.radius;
+            cc.center = new Vector3(0, cc.height / 2 + cc.skinWidth, 0);
         }
         private void AddCapsuleCollider()
         {

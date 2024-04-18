@@ -82,6 +82,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
         {
             ShutdownCSEmulator();
             ApplyFpsLimit(); //念のため
+            SetAdditionalLayerCollisions();
             engine = new EngineFacadeFactory(optionBridge).CreateDefault();
             engine.Start();
             ticker = GameObject.Instantiate(UnityEditor.AssetDatabase.LoadAssetAtPath<GameObject>(TickerPrefab));
@@ -125,6 +126,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
                 EmulatorOptions.FpsLimit.limit30 => 30,
                 _ => throw new InvalidOperationException("Invalid FpsLimit"),
             };
+        }
+
+        static void SetAdditionalLayerCollisions()
+        {
+            Physics.IgnoreLayerCollision(16, 19, false); //OwnAvatar - VenueLayer0
+            Physics.IgnoreLayerCollision(16, 20, false); //OwnAvatar - VenueLayer1
+            Physics.IgnoreLayerCollision(16, 29, true); //OwnAvatar - VenueLayer2
         }
     }
 }

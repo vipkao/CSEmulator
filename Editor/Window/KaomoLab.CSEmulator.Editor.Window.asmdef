@@ -2,6 +2,8 @@
     "name": "KaomoLab.CSEmulator.Editor.Window",
     "rootNamespace": "",
     "references": [
+        "ClusterVR.CreatorKit.Editor.Preview",
+        "ClusterVR.CreatorKit.Preview",
         "KaomoLab.CSEmulator.Editor.Preview",
         "KaomoLab.CSEmulator.Editor.EmulateClasses"
     ],

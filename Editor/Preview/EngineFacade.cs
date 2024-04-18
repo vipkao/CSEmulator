@@ -41,7 +41,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             this.vrmPreparer = new VrmPreparer(
                 previewFinder,
                 optionBridge.raw.vrm,
-                optionBridge
+                optionBridge,
+                optionBridge.playerMeasurementsHolder
             );
 
             prefabItemStore = new PrefabItemStore(
