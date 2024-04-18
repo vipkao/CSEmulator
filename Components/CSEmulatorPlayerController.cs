@@ -120,7 +120,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             this.playerMeasurementsHolder = playerMeasurementsHolder;
             this.rawInput = rawInput;
 
-            ApplyCharacterController();
+            //ApplyCharacterController();
 
             //slopeLimitとstepOffsetの挙動を見ると
             //CharacterControllerとRigidbody(+CapsuleCollider)の併用は

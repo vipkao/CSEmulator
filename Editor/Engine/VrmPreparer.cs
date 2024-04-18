@@ -33,8 +33,8 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var vrmInstance = GameObject.Instantiate(vrm, previewFinder.controllerRoot.transform);
 
             //VenueLayer系衝突判定用のコライダー
-            var avatarCollider = vrmInstance.AddComponent<CapsuleCollider>();
-            vrmInstance.layer = 16; //OwnAvatar
+            //var avatarCollider = vrmInstance.AddComponent<CapsuleCollider>();
+            //vrmInstance.layer = 16; //OwnAvatar
 
             //プレビューのカメラに映ってしまうので
             var renderers = vrmInstance.GetComponentsInChildren<SkinnedMeshRenderer>();
@@ -74,7 +74,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             BuildPostProcess(previewFinder.previewRoot);
 
-            AddjustAvatarCollider(avatarCollider, characterController);
+            //AddjustAvatarCollider(avatarCollider, characterController);
 
             return vrmInstance;
         }
