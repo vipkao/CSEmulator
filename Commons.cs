@@ -125,5 +125,17 @@ namespace Assets.KaomoLab.CSEmulator
             return new UnityEngine.Quaternion(q.x, q.y, q.z, q.w);
         }
 
+        public static bool IsChild(this UnityEngine.GameObject child, UnityEngine.GameObject parent)
+        {
+            var target = child;
+            while(target != null)
+            {
+                if (target == parent) return true;
+                if (target.transform.parent == null) return false;
+                target = target.transform.parent.gameObject;
+            }
+            return false;
+        }
+
     }
 }

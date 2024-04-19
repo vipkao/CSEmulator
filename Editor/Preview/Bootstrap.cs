@@ -130,6 +130,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
 
         static void SetAdditionalLayerCollisions()
         {
+            //CCK2.11.0現在
+            Physics.IgnoreLayerCollision(16, 0, false); //OwnAvatar - Default
+            Physics.IgnoreLayerCollision(16, 16, true); //OwnAvatar - OwnAvatar
             Physics.IgnoreLayerCollision(16, 19, false); //OwnAvatar - VenueLayer0
             Physics.IgnoreLayerCollision(16, 20, false); //OwnAvatar - VenueLayer1
             Physics.IgnoreLayerCollision(16, 29, true); //OwnAvatar - VenueLayer2

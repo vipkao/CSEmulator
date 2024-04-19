@@ -79,9 +79,12 @@ namespace Assets.KaomoLab.CSEmulator
         public void AddCollision(Collision collision)
         {
             if (colliders.Contains(collision.collider)) return;
-            colliders.Add(collision.collider);
 
             var o = collision.collider.gameObject;
+            if (o.IsChild(characterController.gameObject)) return;
+
+            colliders.Add(collision.collider);
+
             if (o.GetComponentInChildren<ReferenceComponent>()) return;
 
             var r = new GameObject("CSEmulatorMovingPlatformReference");
