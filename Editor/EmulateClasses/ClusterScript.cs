@@ -17,6 +17,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly GameObject gameObject;
         readonly ICckComponentFacade cckComponentFacade;
         readonly IItemLifecycler itemLifecycler;
+        readonly IRunningContext runningContext;
         readonly IStartListenerBinder startListenerBinder;
         readonly IUpdateListenerBinder updateListenerBinder;
         readonly IUpdateListenerBinder fixedUpdateListenerBinder;
@@ -58,6 +59,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             GameObject gameObject,
             ICckComponentFacadeFactory cckComponentFacadeFactory,
             IItemLifecycler itemLifecycler,
+            IRunningContext runningContext,
             IStartListenerBinder startListenerBinder,
             IUpdateListenerBinder updateListenerBinder,
             IUpdateListenerBinder fixedUpdateListenerBinder,
@@ -76,6 +78,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.gameObject = gameObject;
             this.cckComponentFacade = cckComponentFacadeFactory.Create(gameObject);
             this.itemLifecycler = itemLifecycler;
+            this.runningContext = runningContext;
             this.startListenerBinder = startListenerBinder;
             this.updateListenerBinder = updateListenerBinder;
             this.fixedUpdateListenerBinder = fixedUpdateListenerBinder;
@@ -114,11 +117,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public EmulateVector3 angularVelocity
         {
             get {
+                if (runningContext.CheckTopLevel("ClusterScript.angularVelocity")) return new EmulateVector3(0, 0, 0);
                 if (!hasMovableItem) return new EmulateVector3(0, 0, 0);
                 return new EmulateVector3(movableItem.AngularVelocity);
             }
             set
             {
+                if (runningContext.CheckTopLevel("ClusterScript.angularVelocity")) return;
                 if (cckComponentFacade.isGrab) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.angularVelocity = value._ToUnityEngine();
@@ -134,7 +139,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             //cacheしてもいいかもしれないけど、
             //都度newするという想定から外れるとロクなことが起きないのでnewしている。
-            get => new ItemHandle(csItemHandler, this.csItemHandler, messageSender);
+            get => new ItemHandle(
+                csItemHandler, this.csItemHandler, runningContext, messageSender
+            );
         }
 
         public ItemTemplateId itemTemplateId
@@ -158,12 +165,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             get
             {
+                if (runningContext.CheckTopLevel("ClusterScript.useGravity")) return false;
                 if (!hasMovableItem) return false;
                 if (movableItem.Rigidbody.isKinematic) return false;
                 return movableItem.Rigidbody.useGravity;
             }
             set
             {
+                if (runningContext.CheckTopLevel("ClusterScript.useGravity")) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 if (movableItem.Rigidbody.isKinematic) throw csItemHandler.itemExceptionFactory.CreateGeneral("非Kinematicにしてください。");
                 movableItem.Rigidbody.useGravity = value;
@@ -174,11 +183,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             get
             {
+                if (runningContext.CheckTopLevel("ClusterScript.velocity")) return new EmulateVector3(0, 0, 0);
                 if (!hasMovableItem) return new EmulateVector3(0, 0, 0);
                 return new EmulateVector3(movableItem.Velocity);
             }
             set
             {
+                if (runningContext.CheckTopLevel("ClusterScript.velocity")) return;
                 if (cckComponentFacade.isGrab) return;
                 if (!hasMovableItem) throw csItemHandler.itemExceptionFactory.CreateGeneral("MovableItemが必要です。");
                 movableItem.Rigidbody.velocity = value._ToUnityEngine();
@@ -187,6 +198,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addForce(EmulateVector3 force)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addForc()")) return;
             if (!isInFixedUpdate)
                 throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddForce(force._ToUnityEngine(), ForceMode.Force);
@@ -194,6 +206,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addForceAt(EmulateVector3 force, EmulateVector3 position)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addForceAt()")) return;
             if (!isInFixedUpdate)
                 throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddForceAtPosition(
@@ -203,11 +216,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForce(EmulateVector3 impulsiveForce)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addImpulsiveForce()")) return;
             movableItem.AddForce(impulsiveForce._ToUnityEngine(), ForceMode.Impulse);
         }
 
         public void addImpulsiveForceAt(EmulateVector3 impulsiveForce, EmulateVector3 position)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addImpulsiveForceAt()")) return;
             movableItem.AddForceAtPosition(
                 impulsiveForce._ToUnityEngine(),
                 position._ToUnityEngine(),
@@ -217,6 +232,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveTorque(EmulateVector3 impulsiveTorque)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addImpulsiveTorque()")) return;
             movableItem.AddTorque(
                 impulsiveTorque._ToUnityEngine(), ForceMode.Impulse
             );
@@ -224,6 +240,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addTorque(EmulateVector3 torque)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.addTorque()")) return;
             if (!isInFixedUpdate)
                 throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("onPhysicsUpdate内でのみ実行可能です。");
             movableItem.AddTorque(
@@ -237,7 +254,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var itemAudioSetList = gameObject.GetComponent<ClusterVR.CreatorKit.Item.IItemAudioSetList>();
             //無い場合は、各値のデフォルト値が入った構造体が渡される。
             var itemAudioSet = itemAudioSetList.ItemAudioSets.FirstOrDefault(set => set.Id == itemAudioSetId);
-            var apiAudio = new ApiAudio(itemAudioSet, gameObject);
+            var apiAudio = new ApiAudio(itemAudioSet, runningContext, gameObject);
 
             return apiAudio;
         }
@@ -247,6 +264,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             string meta
         )
         {
+            if (runningContext.CheckTopLevel("ClusterScript.callExternal()")) return;
             CheckCallExternalSizeLimit(request, meta);
             CheckCallExternalOperationLimit();
 
@@ -299,6 +317,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateQuaternion rotation
         )
         {
+            if (runningContext.CheckTopLevel("ClusterScript.createItem()")) return null;
             CheckCreateItemOperationLimit();
             CheckCreateItemDistanceLimit(position._ToUnityEngine());
 
@@ -306,7 +325,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             if (create == null) return null;
 
             var csItemHandler = create.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
-            var ret = new ItemHandle(csItemHandler, this.csItemHandler, messageSender);
+            var ret = new ItemHandle(csItemHandler, this.csItemHandler, runningContext, messageSender);
 
             return ret;
         }
@@ -332,6 +351,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         }
         public void destroy()
         {
+            if (runningContext.CheckTopLevel("ClusterScript.destroy()")) return;
             if (!arrowDestroy() && !csItemHandler.isCreatedItem)
                 throw csItemHandler.itemExceptionFactory.CreateExecutionNotAllowed("動的アイテムのみ実行可能です。クラフトアイテムの場合は[CS Emulator Prefab Item]コンポーネントを付けてください。");
             itemLifecycler.DestroyItem(item);
@@ -346,6 +366,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public ItemHandle[] getItemsNear(EmulateVector3 position, float radius)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getItemsNear()")) return new ItemHandle[0];
             var handles = Physics.OverlapSphere(
                 position._ToUnityEngine(), radius,
                 CSEmulator.Commons.BuildLayerMask(0, 11, 14, 18), //Default, RidingItem, InteractableItem, GrabbingItem
@@ -368,19 +389,21 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     return false;
                 })
                 .Select(t => t.i.gameObject.GetComponent<Components.CSEmulatorItemHandler>())
-                .Select(h => new ItemHandle(h, this.csItemHandler, messageSender))
+                .Select(h => new ItemHandle(h, this.csItemHandler, runningContext, messageSender))
                 .ToArray();
             return handles;
         }
 
         public Overlap[] getOverlaps()
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getOverlaps()")) return new Overlap[0];
             var overlaps = csItemHandler.GetOverlaps()
                 .Select(o =>
                 {
                     var hitObject = HitObject.Create(
                         o.Item2, this.csItemHandler, o.Item3,
                         playerHandleFactory,
+                        runningContext,
                         messageSender
                     );
                     object selfNode = o.Item1 == "" ? this : subNode(o.Item1);
@@ -392,6 +415,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public PlayerHandle[] getPlayersNear(EmulateVector3 position, float radius)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getPlayersNear()")) return new PlayerHandle[0];
             var handles = Physics.OverlapSphere(
                 position._ToUnityEngine(), radius,
                 -1,
@@ -410,19 +434,36 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public EmulateVector3 getPosition()
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getPosition()")) { } //メッセージのみ
             return new EmulateVector3(gameObject.transform.position);
         }
 
         public EmulateQuaternion getRotation()
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getRotation()")) { } //メッセージのみ
             return new EmulateQuaternion(gameObject.transform.rotation);
         }
 
 
         public object getStateCompat(string target, string key, string parameterType)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.getStateCompat()")) return ToDefalutValue(parameterType);
             var sendable = cckComponentFacade.GetState(target, key, parameterType);
             return sendable;
+        }
+        object ToDefalutValue(string parameterType)
+        {
+            switch (parameterType)
+            {
+                case "signal": return default(DateTime);
+                case "boolean": return default(bool);
+                case "float": return default(float);
+                case "double": return default(double);
+                case "integer": return default(int);
+                case "vector2": return new EmulateVector2();
+                case "vector3": return new EmulateVector3();
+                default: throw new ArgumentException(parameterType);
+            }
         }
 
         public HumanoidAnimation humanoidAnimation(string humanoidAnimationId)
@@ -431,7 +472,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var entry = (ClusterVR.CreatorKit.Item.Implements.HumanoidAnimationListEntry)list.HumanoidAnimations.FirstOrDefault(entry => entry.Id == humanoidAnimationId);
             var ha = ClusterVR.CreatorKit.Editor.Builder.HumanoidAnimationBuilder.Build(entry.Animation);
             entry.SetHumanoidAnimation(ha);
-            var humanoidAnimation = new HumanoidAnimation(entry);
+            var humanoidAnimation = new HumanoidAnimation(entry, runningContext);
 
             return humanoidAnimation;
         }
@@ -466,13 +507,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             if (itemMaterialSetList == null)
             {
                 logger.Warning("ItemMaterialSetListが指定されていません。");
-                return new MaterialHandle(null, itemExceptionFactory);
+                return new MaterialHandle(null, runningContext, itemExceptionFactory);
             }
             var set = itemMaterialSetList.ItemMaterialSets.FirstOrDefault(set => set.Id == materialId);
             if (set.Material == null)
             {
                 logger.Warning(String.Format("materialId:{0}がありません。", materialId));
-                return new MaterialHandle(null, itemExceptionFactory);
+                return new MaterialHandle(null, runningContext, itemExceptionFactory);
             }
 
             //アイテム毎にMaterialを複製して使用するような動きの模様
@@ -489,7 +530,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 renderer.sharedMaterials = materials;
             }
 
-            var ret = new MaterialHandle(prepared, itemExceptionFactory);
+            var ret = new MaterialHandle(prepared, runningContext, itemExceptionFactory);
             return ret;
         }
 
@@ -604,7 +645,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void onReceive(Action<string, object, ItemHandle> Callback)
         {
-            receiveListenerBinder.SetReceiveCallback(this.csItemHandler, Callback);
+            receiveListenerBinder.SetReceiveCallback(this.csItemHandler, this.runningContext, Callback);
         }
 
         public void onRide(Action<bool, PlayerHandle> Callback)
@@ -670,6 +711,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateVector3 origin, EmulateVector3 direction, float maxDistance
         )
         {
+            if (runningContext.CheckTopLevel("ClusterScript.raycast()")) return null;
             var isHit = Physics.Raycast(
                 origin._ToUnityEngine(),
                 direction._ToUnityEngine(),
@@ -697,6 +739,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             EmulateVector3 origin, EmulateVector3 direction, float maxDistance
         )
         {
+            if (runningContext.CheckTopLevel("ClusterScript.raycastAll()")) return new RaycastResult[0];
             var raycastHits = Physics.RaycastAll(
                 origin._ToUnityEngine(),
                 direction._ToUnityEngine(),
@@ -728,7 +771,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var csPlayerHandler = gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>();
             var hitObject = HitObject.Create(
                 csItemHandler, this.csItemHandler, csPlayerHandler,
-                playerHandleFactory, messageSender
+                playerHandleFactory, runningContext, messageSender
             );
 
             return hitObject;
@@ -736,11 +779,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void sendSignalCompat(string target, string key)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.sendSignalCompat()")) return;
             cckComponentFacade.SendSignal(target, key);
         }
 
         public void setPosition(EmulateVector3 v)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.setPosition()")) return;
             if (!hasMovableItem && !hasCharacterItem)
             {
                 logger.Warning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
@@ -754,6 +799,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setRotation(EmulateQuaternion v)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.setRotation()")) return;
             if (!hasMovableItem && !hasCharacterItem)
             {
                 logger.Warning(String.Format("[{0}]setPosition() need [Movable Item] or [Character Item] component.", this.gameObject.name));
@@ -767,6 +813,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setStateCompat(string target, string key, object value)
         {
+            if (runningContext.CheckTopLevel("ClusterScript.setStateCompat()")) return;
             cckComponentFacade.SetState(target, key, value);
         }
 
@@ -780,7 +827,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             var textView = child.gameObject.GetComponent<ClusterVR.CreatorKit.World.ITextView>();
             var ret = new SubNode(
-                child, item, textView, updateListenerBinder
+                child, item, textView, runningContext, updateListenerBinder
             );
             return ret;
         }

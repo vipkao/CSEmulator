@@ -16,7 +16,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
     public interface IReceiveListenerBinder
     {
-        void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, object, ItemHandle> Callback);
+        void SetReceiveCallback(Components.CSEmulatorItemHandler owner, EmulateClasses.IRunningContext runningContext, Action<string, object, ItemHandle> Callback);
         void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner);
     }
 
@@ -195,6 +195,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     public interface ISendableSize
     {
         int GetSize();
+    }
+
+    public interface IRunningContext
+    {
+        bool isTopLevel { get; }
+        bool CheckTopLevel(string method);
     }
 
 }

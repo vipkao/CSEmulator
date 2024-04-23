@@ -18,6 +18,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public Components.CSEmulatorItemHandler csItemHandler { get; private set; }
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
+        readonly IRunningContext runningContext;
         readonly IMessageSender messageSender;
         readonly ClusterVR.CreatorKit.Item.IMovableItem movableItem;
 
@@ -25,6 +26,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         public ItemHandle(
             Components.CSEmulatorItemHandler csItemHandler,
             Components.CSEmulatorItemHandler csOwnerItemHandler,
+            IRunningContext runningContext,
             IMessageSender messageSender
         )
         {
@@ -39,6 +41,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
             this.csOwnerItemHandler = csOwnerItemHandler;
 
+            this.runningContext = runningContext;
             this.messageSender = messageSender;
 
             //おそらくメモリーリークの原因になるのでNG
@@ -47,6 +50,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForce(EmulateVector3 force)
         {
+            if (runningContext.CheckTopLevel("ItemHandle.addImpulsiveForce()")) return;
             if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
@@ -65,6 +69,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveForceAt(EmulateVector3 impluse, EmulateVector3 position)
         {
+            if (runningContext.CheckTopLevel("ItemHandle.addImpulsiveForceAt()")) return;
             if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerOperationLimit();
             CheckOwnerDistanceLimit();
@@ -81,6 +86,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void addImpulsiveTorque(EmulateVector3 torque)
         {
+            if (runningContext.CheckTopLevel("ItemHandle.addImpulsiveTorque()")) return;
             //CSETODO 単にreturnではなく親切にメッセージを出したい。
             if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             if (!exists()) return;
@@ -95,11 +101,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public bool exists()
         {
+            if (runningContext.CheckTopLevel("ItemHandle.exists()")) return false;
             return csItemHandler.Exists();
         }
 
         public void send(string requestName, Jint.Native.JsValue arg)
         {
+            if (runningContext.CheckTopLevel("ItemHandle.send()")) return;
             //CCK2.11.0現在 sendにundefinedを入れると動かない。
             //CSETODO 単にreturnではなく親切にメッセージを出したい。
             if (arg is Jint.Native.JsUndefined) return;
@@ -109,6 +117,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         }
         public void send(string requestName, object arg)
         {
+            if (runningContext.CheckTopLevel("ItemHandle.send()")) return;
             //CSETODO 単にreturnではなく親切にメッセージを出したい。
             if (!csItemHandler.Exists() || !csOwnerItemHandler.Exists()) return;
             CheckOwnerSendOperationLimit();

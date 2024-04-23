@@ -10,6 +10,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     {
         //structなのでnullではなく、各値のデフォルト値が入っている。
         readonly ClusterVR.CreatorKit.Item.ItemAudioSet itemAudioSet;
+        readonly IRunningContext runningContext;
 
         readonly UnityEngine.GameObject root;
         readonly UnityEngine.GameObject gameObject;
@@ -20,10 +21,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public ApiAudio(
             ClusterVR.CreatorKit.Item.ItemAudioSet itemAudioSet,
+            IRunningContext runningContext,
             UnityEngine.GameObject root
         )
         {
             this.itemAudioSet = itemAudioSet;
+            this.runningContext = runningContext;
             this.root = root;
 
             //ScriptableItemの子のような挙動をする。
@@ -45,10 +48,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             get
             {
+                if (runningContext.CheckTopLevel("ApiAudio.volume")) return 1;
                 return _volume;
             }
             set
             {
+                if (runningContext.CheckTopLevel("ApiAudio.volume")) return;
                 //CSETODO audioSourceは1を超えて設定できないので、別の変数に入れおく。
                 //なにかいい方法を見つける？
                 _volume = Math.Clamp(value, 0f, 2.5f);
@@ -58,16 +63,19 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void attach(SubNode subNode)
         {
+            if (runningContext.CheckTopLevel("ApiAudio.attach()")) return;
             gameObject.transform.localPosition = subNode.getPosition()._ToUnityEngine();
         }
 
         public void attachToRoot()
         {
+            if (runningContext.CheckTopLevel("ApiAudio.attachToRoot()")) return;
             gameObject.transform.localPosition = UnityEngine.Vector3.zero;
         }
 
         public void play()
         {
+            if (runningContext.CheckTopLevel("ApiAudio.play()")) return;
             if (audioSource.isPlaying)
             {
                 audioSource.Stop();
@@ -77,6 +85,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void stop()
         {
+            if (runningContext.CheckTopLevel("ApiAudio.stop()")) return;
             audioSource.Stop();
         }
 

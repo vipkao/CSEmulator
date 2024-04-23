@@ -11,14 +11,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     public class MaterialHandle
     {
         readonly Material material;
+        readonly IRunningContext runningContext;
         readonly IItemExceptionFactory itemExceptionFactory;
 
         public MaterialHandle(
             Material material,
+            IRunningContext runningContext,
             IItemExceptionFactory itemExceptionFactory
         )
         {
             this.material = material;
+            this.runningContext = runningContext;
             this.itemExceptionFactory = itemExceptionFactory;
         }
 
@@ -48,6 +51,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setBaseColor(float r, float g, float b, float a)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setBaseColor()")) return;
             if (IsInvalid(r, g, b, a)) return;
             if(material == null) return;
 
@@ -61,6 +65,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setColor(string propertyName, float r, float g, float b, float a)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setColor()")) return;
             CheckPropertyName(propertyName);
             if (IsInvalid(r, g, b, a)) return;
             if (material == null) return;
@@ -75,6 +80,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setEmissionColor(float r, float g, float b, float a)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setEmissionColor()")) return;
             if (IsInvalid(r, g, b, a)) return;
             if (material == null) return;
 
@@ -84,6 +90,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setFloat(string propertyName, float value)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setFloat()")) return;
             CheckPropertyName(propertyName);
             if (IsInvalid(value)) return;
             if (material == null) return;
@@ -93,6 +100,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setFloat2(string propertyName, float x, float y)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setFloat2()")) return;
             CheckPropertyName(propertyName);
             if (IsInvalid(x, y)) return;
             if (material == null) return;
@@ -102,6 +110,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setFloat3(string propertyName, float x, float y, float z)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setFloat3()")) return;
             CheckPropertyName(propertyName);
             if (IsInvalid(x, y, z)) return;
             if (material == null) return;
@@ -111,6 +120,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setFloat4(string propertyName, float x, float y, float z, float w)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setFloat4()")) return;
             CheckPropertyName(propertyName);
             if (IsInvalid(x, y, z, w)) return;
             if (material == null) return;
@@ -120,6 +130,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setMatrix(string propertyName, Jint.Native.TypedArray.TypedArrayInstance _matrix)
         {
+            if (runningContext.CheckTopLevel("MaterialHandle.setMatrix()")) return;
             var matrix = PackFloatArray(_matrix);
             CheckPropertyName(propertyName);
             CheckArrayLength(matrix);

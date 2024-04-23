@@ -33,7 +33,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             }
         }
 
-        readonly Dictionary<ulong, (Components.CSEmulatorItemHandler owner, Action<string, object, EmulateClasses.ItemHandle>)> receivers = new Dictionary<ulong, (Components.CSEmulatorItemHandler, Action<string, object, EmulateClasses.ItemHandle>)>();
+        readonly Dictionary<ulong, (Components.CSEmulatorItemHandler owner, EmulateClasses.IRunningContext, Action<string, object, EmulateClasses.ItemHandle>)> receivers = new Dictionary<ulong, (Components.CSEmulatorItemHandler, EmulateClasses.IRunningContext, Action<string, object, EmulateClasses.ItemHandle>)>();
         readonly List<Message> queue = new List<Message>();
 
         public ITicker ticker = new Implements.DateTimeTicks();
@@ -66,13 +66,14 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
                 if (!receivers.ContainsKey(message.targetId)) continue;
 
-                var (owner, receiver) = receivers[message.targetId];
+                var (owner, ownerContext, receiver) = receivers[message.targetId];
                 //このタイミングでItemHandleがスクリプト空間を超えるので
                 //owner(スクリプト空間主＝$)が切り替わる。
                 //切り替わるタイミングで、過去ownerがhandleを保持している可能性はあるのでnewで作り直す。
                 var sender = new EmulateClasses.ItemHandle(
                     message.sender, //senderのItemHandleということ
                     owner,
+                    ownerContext,
                     this
                 );
                 var arg = EmulateClasses.StateProxy.SanitizeSingleValue(
@@ -80,6 +81,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                     h => new EmulateClasses.ItemHandle(
                         h.csItemHandler,
                         owner,
+                        ownerContext,
                         this
                     ),
                     h => new EmulateClasses.PlayerHandle(
@@ -91,9 +93,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             }
         }
 
-        public void SetReceiveCallback(Components.CSEmulatorItemHandler owner, Action<string, object, EmulateClasses.ItemHandle> Callback)
+        public void SetReceiveCallback(Components.CSEmulatorItemHandler owner, EmulateClasses.IRunningContext ownerContext, Action<string, object, EmulateClasses.ItemHandle> Callback)
         {
-            receivers.Add(owner.item.Id.Value, (owner, Callback));
+            receivers.Add(owner.item.Id.Value, (owner, ownerContext, Callback));
         }
 
         public void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner)

@@ -17,6 +17,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly GameObject gameObject;
         readonly ClusterVR.CreatorKit.Item.IItem parent;
         readonly ClusterVR.CreatorKit.World.ITextView textView;
+        readonly IRunningContext runningContext;
         readonly IUpdateListenerBinder updateListenerBinder;
         readonly string positionCallbackKey;
         readonly string rotationCallbackKey;
@@ -32,6 +33,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             Transform transform,
             ClusterVR.CreatorKit.Item.IItem parent,
             ClusterVR.CreatorKit.World.ITextView textView,
+            IRunningContext runningContext,
             IUpdateListenerBinder updateListenerBinder
         )
         {
@@ -46,11 +48,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             this.parent = parent;
             this.textView = textView;
+            this.runningContext = runningContext;
             this.updateListenerBinder = updateListenerBinder;
         }
 
         public bool getEnabled()
         {
+            if (runningContext.CheckTopLevel("SubNode.getEnabled()")) { }; //メッセージだけの模様？
             if (gameObject == null) return false;
             if (parent.IsDestroyed) return false;
             return gameObject.activeSelf;
@@ -58,6 +62,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public EmulateVector3 getGlobalPosition()
         {
+            if (runningContext.CheckTopLevel("SubNode.getGlobalPosition()")) { }; //メッセージだけの模様？
             if (gameObject == null) return null;
             if (parent.IsDestroyed) return null;
             return new EmulateVector3(gameObject.transform.position);
@@ -65,6 +70,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public EmulateQuaternion getGlobalRotation()
         {
+            if (runningContext.CheckTopLevel("SubNode.getGlobalRotation()")) { }; //メッセージだけの模様？
             if (gameObject == null) return null;
             if (parent.IsDestroyed) return null;
             return new EmulateQuaternion(gameObject.transform.rotation);
@@ -72,6 +78,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public EmulateVector3 getPosition()
         {
+            if (runningContext.CheckTopLevel("SubNode.getPosition()")) { }; //メッセージだけの模様？
             //孫ノードの場合、子ノードベースのPositionになる
             if (gameObject == null) return null;
             if (parent.IsDestroyed) return null;
@@ -80,6 +87,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public EmulateQuaternion getRotation()
         {
+            if (runningContext.CheckTopLevel("SubNode.getRotation()")) { }; //メッセージだけの模様？
             if (gameObject == null) return null;
             if (parent.IsDestroyed) return null;
             return new EmulateQuaternion(gameObject.transform.localRotation);
@@ -87,6 +95,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public bool getTotalEnabled()
         {
+            if (runningContext.CheckTopLevel("SubNode.getTotalEnabled()")) { }; //メッセージだけの模様？
             if (gameObject == null) return false;
             if (parent.IsDestroyed) return false;
             return gameObject.activeInHierarchy;
@@ -99,6 +108,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setEnabled(bool v)
         {
+            if (runningContext.CheckTopLevel("SubNode.setEnabled()")) return;
             if (gameObject == null) return;
             if (parent.IsDestroyed) return;
 
@@ -108,6 +118,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setPosition(EmulateVector3 v)
         {
+            if (runningContext.CheckTopLevel("SubNode.setPosition()")) return;
             if (gameObject == null) return;
             if (parent.IsDestroyed) return;
 
@@ -174,6 +185,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setRotation(EmulateQuaternion v)
         {
+            if (runningContext.CheckTopLevel("SubNode.setRotation()")) return;
             if (gameObject == null) return;
             if (parent.IsDestroyed) return;
 
@@ -231,26 +243,31 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void setText(string text)
         {
+            if (runningContext.CheckTopLevel("SubNode.setText()")) return;
             textView.SetText(text);
         }
 
         public void setTextAlignment(TextAlignment alignment)
         {
+            if (runningContext.CheckTopLevel("SubNode.setTextAlignment()")) return;
             textView.SetTextAlignment((UnityEngine.TextAlignment)alignment);
         }
 
         public void setTextAnchor(TextAnchor anchor)
         {
+            if (runningContext.CheckTopLevel("SubNode.setTextAnchor()")) return;
             textView.SetTextAnchor((UnityEngine.TextAnchor)anchor);
         }
 
         public void setTextColor(float r, float g, float b, float a)
         {
+            if (runningContext.CheckTopLevel("SubNode.setTextColor()")) return;
             textView.SetColor(new Color(r, g, b, a));
         }
 
         public void setTextSize(float size)
         {
+            if (runningContext.CheckTopLevel("SubNode.setTextSize()")) return;
             textView.SetSize(size);
         }
 

@@ -8,11 +8,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 {
     public class StateProxy
     {
+        readonly IRunningContext runningContext;
+
         readonly Dictionary<string, object> state;
 
         public StateProxy(
+            IRunningContext runningContext
         )
         {
+            this.runningContext = runningContext;
             state = new Dictionary<string, object>();
         }
 
@@ -20,6 +24,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         {
             get
             {
+                if (runningContext.CheckTopLevel("ClusterScript.State")) { }; //メッセージのみ
                 if (!state.ContainsKey(index))
                     return Jint.Native.JsValue.Undefined;
 
@@ -31,6 +36,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             }
             set
             {
+                if (runningContext.CheckTopLevel("ClusterScript.State")) { }; //メッセージのみ
                 state[index] = SanitizeSingleValue(value);
             }
         }

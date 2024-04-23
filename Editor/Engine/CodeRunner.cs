@@ -26,6 +26,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly OnUpdateBridge onFixedUpdateBridge;
         readonly CckComponentFacadeFactory cckComponentFacadeFactory;
         readonly ItemLifecycler itemLifecycler;
+        readonly RunningContextBridge runningContext;
 
         List<Action> shutdownActions = new List<Action>();
         bool isRunning = false;
@@ -51,6 +52,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.loggerFactory = loggerFactory;
 
             code = scriptableItem.GetSourceCode(true);
+            runningContext = new RunningContextBridge();
 
             onStartInvoker = new OnStartInvoker();
 
@@ -60,7 +62,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             onFixedUpdateBridge = new OnUpdateBridge();
 
-            stateProxy = new EmulateClasses.StateProxy();
+            stateProxy = new EmulateClasses.StateProxy(runningContext);
 
             cckComponentFacadeFactory = new CckComponentFacadeFactory(
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.RoomStateRepository,
@@ -73,7 +75,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemCreator,
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.ItemDestroyer
             );
-
         }
 
         public void Start()
@@ -103,6 +104,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 gameObject,
                 cckComponentFacadeFactory,
                 itemLifecycler,
+                runningContext,
                 onStartInvoker,
                 onUpdateBridge,
                 onFixedUpdateBridge,
@@ -135,7 +137,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             try
             {
+                runningContext.isTopLevel = true;
                 engine.Execute(code);
+                runningContext.isTopLevel = false;
             }
             catch (Exception e)
             {
@@ -158,6 +162,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
 
             isRunning = true;
             shutdownActions.Add(() => isRunning = false);
+
+            runningContext.Reset();
+            shutdownActions.Add(() => runningContext.Reset());
         }
         private void CsItemHandler_OnFixedUpdate()
         {

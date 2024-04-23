@@ -9,12 +9,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     public class HumanoidAnimation
     {
         readonly ClusterVR.CreatorKit.Item.IHumanoidAnimationListEntry entry;
+        readonly IRunningContext runningContext;
 
         public HumanoidAnimation(
-            ClusterVR.CreatorKit.Item.IHumanoidAnimationListEntry entry
+            ClusterVR.CreatorKit.Item.IHumanoidAnimationListEntry entry,
+            IRunningContext runningContext
         )
         {
             this.entry = entry;
+            this.runningContext = runningContext;
         }
 
         public float getLength()
