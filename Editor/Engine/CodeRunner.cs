@@ -20,13 +20,11 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         readonly IRunnerOptions options;
         readonly ILoggerFactory loggerFactory;
 
-        readonly EmulateClasses.StateProxy stateProxy;
         readonly OnStartInvoker onStartInvoker;
         readonly OnUpdateBridge onUpdateBridge;
         readonly OnUpdateBridge onFixedUpdateBridge;
         readonly CckComponentFacadeFactory cckComponentFacadeFactory;
         readonly ItemLifecycler itemLifecycler;
-        readonly RunningContextBridge runningContext;
 
         List<Action> shutdownActions = new List<Action>();
         bool isRunning = false;
@@ -52,7 +50,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             this.loggerFactory = loggerFactory;
 
             code = scriptableItem.GetSourceCode(true);
-            runningContext = new RunningContextBridge();
 
             onStartInvoker = new OnStartInvoker();
 
@@ -61,8 +58,6 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             onUpdateBridge = new OnUpdateBridge();
 
             onFixedUpdateBridge = new OnUpdateBridge();
-
-            stateProxy = new EmulateClasses.StateProxy(runningContext);
 
             cckComponentFacadeFactory = new CckComponentFacadeFactory(
                 ClusterVR.CreatorKit.Editor.Preview.Bootstrap.RoomStateRepository,
@@ -100,6 +95,17 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
             var materialSubstituer = new MaterialSubstituter(
             );
 
+            var runningContext = new RunningContextBridge();
+
+            var sendableSanitizer = new SendableSanitizer(
+                engine
+            );
+
+            var stateProxy = new EmulateClasses.StateProxy(
+                runningContext,
+                sendableSanitizer
+            );
+
             var clusterScript = new EmulateClasses.ClusterScript(
                 gameObject,
                 cckComponentFacadeFactory,
@@ -116,6 +122,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 exceptionFactory,
                 externalHttpCaller,
                 materialSubstituer,
+                sendableSanitizer,
                 stateProxy,
                 logger
             );

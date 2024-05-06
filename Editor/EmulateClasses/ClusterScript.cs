@@ -30,6 +30,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         readonly IItemExceptionFactory itemExceptionFactory;
         readonly IExternalCaller externalCaller;
         readonly IMaterialSubstituter materialSubstituter;
+        readonly ISendableSanitizer sendableSanitizer;
         readonly StateProxy stateProxy;
         readonly ILogger logger;
 
@@ -71,6 +72,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             IItemExceptionFactory itemExceptionFactory,
             IExternalCaller externalCaller,
             IMaterialSubstituter materialSubstituer,
+            ISendableSanitizer sendableSanitizer,
             StateProxy stateProxy,
             ILogger logger
         )
@@ -90,6 +92,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.itemExceptionFactory = itemExceptionFactory;
             this.externalCaller = externalCaller;
             this.materialSubstituter = materialSubstituer;
+            this.sendableSanitizer = sendableSanitizer;
             this.stateProxy = stateProxy;
             this.logger = logger;
 
@@ -140,7 +143,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             //cacheしてもいいかもしれないけど、
             //都度newするという想定から外れるとロクなことが起きないのでnewしている。
             get => new ItemHandle(
-                csItemHandler, this.csItemHandler, runningContext, messageSender
+                csItemHandler, this.csItemHandler, runningContext, sendableSanitizer, messageSender
             );
         }
 
@@ -325,7 +328,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             if (create == null) return null;
 
             var csItemHandler = create.gameObject.GetComponent<Components.CSEmulatorItemHandler>();
-            var ret = new ItemHandle(csItemHandler, this.csItemHandler, runningContext, messageSender);
+            var ret = new ItemHandle(csItemHandler, this.csItemHandler, runningContext, sendableSanitizer, messageSender);
 
             return ret;
         }
@@ -389,7 +392,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                     return false;
                 })
                 .Select(t => t.i.gameObject.GetComponent<Components.CSEmulatorItemHandler>())
-                .Select(h => new ItemHandle(h, this.csItemHandler, runningContext, messageSender))
+                .Select(h => new ItemHandle(h, this.csItemHandler, runningContext, sendableSanitizer, messageSender))
                 .ToArray();
             return handles;
         }
@@ -404,6 +407,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                         o.Item2, this.csItemHandler, o.Item3,
                         playerHandleFactory,
                         runningContext,
+                        sendableSanitizer,
                         messageSender
                     );
                     object selfNode = o.Item1 == "" ? this : subNode(o.Item1);
@@ -645,7 +649,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
         public void onReceive(Action<string, object, ItemHandle> Callback)
         {
-            receiveListenerBinder.SetReceiveCallback(this.csItemHandler, this.runningContext, Callback);
+            receiveListenerBinder.SetReceiveCallback(csItemHandler, runningContext, sendableSanitizer, Callback);
         }
 
         public void onRide(Action<bool, PlayerHandle> Callback)
@@ -771,7 +775,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             var csPlayerHandler = gameObject.GetComponentInChildren<Components.CSEmulatorPlayerHandler>();
             var hitObject = HitObject.Create(
                 csItemHandler, this.csItemHandler, csPlayerHandler,
-                playerHandleFactory, runningContext, messageSender
+                playerHandleFactory, runningContext, sendableSanitizer, messageSender
             );
 
             return hitObject;

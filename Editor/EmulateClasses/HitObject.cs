@@ -26,10 +26,13 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             CSEmulator.Components.CSEmulatorPlayerHandler csPlayerHandler,
             IPlayerHandleFactory playerHandleFactory,
             IRunningContext runningContext,
+            ISendableSanitizer sendableSanitizer,
             IMessageSender messageSender
         )
         {
-            var itemHandler = csItemHandler == null ? null : new ItemHandle(csItemHandler, csItemOwnerHandler, runningContext, messageSender);
+            var itemHandler = csItemHandler == null ? null : new ItemHandle(
+                csItemHandler, csItemOwnerHandler, runningContext, sendableSanitizer, messageSender
+            );
             var playerHandler = csPlayerHandler == null ? null : playerHandleFactory.CreateById(
                 csPlayerHandler.id,
                 csItemOwnerHandler

@@ -19,6 +19,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
         //ownerの切り替えにはnewを強制しておきたいためprivate
         readonly Components.CSEmulatorItemHandler csOwnerItemHandler;
         readonly IRunningContext runningContext;
+        readonly ISendableSanitizer sendableSanitizer;
         readonly IMessageSender messageSender;
         readonly ClusterVR.CreatorKit.Item.IMovableItem movableItem;
 
@@ -27,6 +28,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             Components.CSEmulatorItemHandler csItemHandler,
             Components.CSEmulatorItemHandler csOwnerItemHandler,
             IRunningContext runningContext,
+            ISendableSanitizer sendableSanitizer,
             IMessageSender messageSender
         )
         {
@@ -42,6 +44,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
             this.csOwnerItemHandler = csOwnerItemHandler;
 
             this.runningContext = runningContext;
+            this.sendableSanitizer = sendableSanitizer;
             this.messageSender = messageSender;
 
             //おそらくメモリーリークの原因になるのでNG
@@ -131,7 +134,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
                 UnityEngine.Debug.LogWarning(ex.Message);
             }
 
-            var sanitized = StateProxy.SanitizeSingleValue(arg);
+            var sanitized = sendableSanitizer.Sanitize(arg);
             messageSender.Send(csItemHandler.item.Id.Value, requestName, sanitized, csOwnerItemHandler);
         }
 

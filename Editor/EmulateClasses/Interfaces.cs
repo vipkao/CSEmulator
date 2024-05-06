@@ -16,7 +16,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
 
     public interface IReceiveListenerBinder
     {
-        void SetReceiveCallback(Components.CSEmulatorItemHandler owner, EmulateClasses.IRunningContext runningContext, Action<string, object, ItemHandle> Callback);
+        void SetReceiveCallback(
+            Components.CSEmulatorItemHandler owner,
+            EmulateClasses.IRunningContext runningContext,
+            EmulateClasses.ISendableSanitizer sanitizer,
+            Action<string, object, ItemHandle> Callback
+        );
         void DeleteReceiveCallback(Components.CSEmulatorItemHandler owner);
     }
 
@@ -190,6 +195,15 @@ namespace Assets.KaomoLab.CSEmulator.Editor.EmulateClasses
     {
         UnityEngine.Material Prepare(UnityEngine.Material material);
         void Destroy();
+    }
+
+    public interface ISendableSanitizer
+    {
+        public object Sanitize(
+            object value,
+            Func<ItemHandle, ItemHandle> SanitizeItemHandle = null,
+            Func<PlayerHandle, PlayerHandle> SanitizeItemPlayerHandle = null
+        );
     }
 
     public interface ISendableSize
