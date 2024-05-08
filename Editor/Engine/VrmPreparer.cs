@@ -59,6 +59,9 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
                 new Components.CSEmulatorPlayerController.MovingPlatformSettings(
                     worldRuntimeSettings
                 ),
+                new Components.CSEmulatorPlayerController.MantlingSettings(
+                    worldRuntimeSettings
+                ),
                 new UnityCharacterController(characterController),
                 animationController,
                 desktopPlayerControllerReflector,

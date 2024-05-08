@@ -24,5 +24,12 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Engine
         {
             parent.Move(motion);
         }
+
+        public void WarpTo(Vector3 warp)
+        {
+            parent.enabled = false;
+            parent.transform.position = warp;
+            parent.enabled = true;
+        }
     }
 }

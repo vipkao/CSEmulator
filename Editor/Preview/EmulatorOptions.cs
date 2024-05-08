@@ -37,16 +37,18 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Preview
             }
         }
 
+        //一人称視点開始だと三人称視点に変更してもItemHighligherが正常に稼働する（原因調査しても沼りそうなので未調査）
         const string PrefsKeyFirstPersonPerspective = "KaomoCSEmulator_firstPersonPerspective";
         public bool perspective
         {
-            get => PlayerPrefs.GetInt(PrefsKeyFirstPersonPerspective, 1) == 1;
+            get => _perspective;
             set
             {
-                PlayerPrefs.SetInt(PrefsKeyFirstPersonPerspective, value ? 1 : 0);
+                _perspective = value;
                 OnChangedPerspective.Invoke();
             }
         }
+        bool _perspective = true;
 
         const string PrefsKeyVrm = "KaomoCSEmulator_vrm";
         public const string DefaultVrmPath = "Assets/KaomoLab/CSEmulator/VRM/CSEmulatorDummyHumanoid.prefab";

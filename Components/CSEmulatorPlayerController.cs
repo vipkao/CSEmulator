@@ -28,6 +28,17 @@ namespace Assets.KaomoLab.CSEmulator.Components
                     UnityEngine.Debug.Log("移動する床に追従する挙動はCSEmulatorにより少しは再現できているかもしれません。");
             }
         }
+        public class MantlingSettings
+        {
+            public readonly bool UseMantling;
+
+            public MantlingSettings(WorldRuntimeSetting worldRuntimeSetting)
+            {
+                UseMantling = worldRuntimeSetting?.UseMantling ?? WorldRuntimeSetting.DefaultValues.UseMantling;
+                if (UseMantling)
+                    UnityEngine.Debug.Log("よじ登る挙動はCSEmulatorにより少しは再現できているかもしれません。");
+            }
+        }
 
         const string RIGHT_HAND_UP = "IsRightHandUp";
         const string LEFT_HAND_UP = "IsLeftHandUp";
@@ -51,6 +62,9 @@ namespace Assets.KaomoLab.CSEmulator.Components
         BaseMoveSpeedManager speedManager;
         FaceConstraintManager faceConstraintManager;
         PlayerGroundingManager playerGroundingManager;
+        PlayerMantlingManager playerMantlingManager;
+        PointOfViewManager pointOfViewManager;
+        bool needPointOfViewCommandBufferRead = false;
 
         public HumanPoseManager poseManager { get; private set; } = null;
 
@@ -68,6 +82,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         Animator _animator = null;
 
         MovingPlatformSettings movingPlatformSettings;
+        MantlingSettings mantlingSettings;
         IVelocityYHolder cckPlayerVelocityY;
         IBaseMoveSpeedHolder cckPlayerBaseMoveSpeed;
         IPlayerRotateHolder playerRotateHolder;
@@ -77,6 +92,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
 
         public void Construct(
             MovingPlatformSettings movingPlatformSettings,
+            MantlingSettings mantlingSettings,
             ICharacterController characterController,
             RuntimeAnimatorController animatorController,
             IVelocityYHolder cckPlayerVelocityY,
@@ -88,6 +104,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
         )
         {
             this.movingPlatformSettings = movingPlatformSettings;
+            this.mantlingSettings = mantlingSettings;
             this.characterController = characterController;
             this.cckPlayerVelocityY = cckPlayerVelocityY;
             this.cckPlayerBaseMoveSpeed = cckPlayerBaseMoveSpeed;
@@ -116,7 +133,6 @@ namespace Assets.KaomoLab.CSEmulator.Components
             );
             this.perspectiveChangeNotifier = perspectiveChangeNotifier;
             perspectiveChangeNotifier.OnChanged += PerspectiveChangeNotifier_OnValueChanged;
-            perspectiveChangeNotifier.RequestNotify();
             this.playerMeasurementsHolder = playerMeasurementsHolder;
             this.rawInput = rawInput;
 
@@ -132,6 +148,15 @@ namespace Assets.KaomoLab.CSEmulator.Components
                 GetComponent<CharacterController>(),
                 playerRotateHolder.rotateTransform
             );
+            playerMantlingManager = new PlayerMantlingManager(
+                rawInput,
+                GetComponent<CharacterController>(),
+                playerRotateHolder.rotateTransform
+            );
+
+            AddThridPersonCamera();
+
+            perspectiveChangeNotifier.RequestNotify();
         }
         private void ApplyCharacterController()
         {
@@ -160,10 +185,39 @@ namespace Assets.KaomoLab.CSEmulator.Components
             rb.angularDrag = 0;
             rb.constraints = RigidbodyConstraints.FreezeAll;
         }
+        private void AddThridPersonCamera()
+        {
+            var cameraObject = gameObject.transform.Find("Root/MainCamera").gameObject;
+            var contactableItemRaycaster = gameObject.GetComponent<ClusterVR.CreatorKit.Preview.Item.ContactableItemRaycaster>();
+            var contactableItemRaycaster_targetCamera = typeof(ClusterVR.CreatorKit.Preview.Item.ContactableItemRaycaster).GetField("targetCamera", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var itemHighlighter = gameObject.GetComponent<ClusterVR.CreatorKit.Preview.Item.ItemHighlighter>();
+            var itemHighlighter_targetCamera = typeof(ClusterVR.CreatorKit.Preview.Item.ItemHighlighter).GetField("targetCamera", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            var vector = gameObject.transform.Find("Root/MainCamera/Vector").gameObject;
+            pointOfViewManager = new PointOfViewManager(
+                3, //実測値
+                cameraObject,
+                gameObject.GetComponentsInChildren<Collider>(),
+                firstCamera =>
+                {
+                    vector.SetActive(true);
+                    contactableItemRaycaster_targetCamera.SetValue(contactableItemRaycaster, firstCamera);
+                    itemHighlighter_targetCamera.SetValue(itemHighlighter, firstCamera);
+                },
+                thridCamera =>
+                {
+                    vector.SetActive(false);
+                    contactableItemRaycaster_targetCamera.SetValue(contactableItemRaycaster, thridCamera);
+                    itemHighlighter_targetCamera.SetValue(itemHighlighter, thridCamera);
+                }
+            );
+            pointOfViewManager.thirdPersonCamera.cullingMask |= (1 << 16); //OwnAvater表示
+            needPointOfViewCommandBufferRead = true;
+        }
 
         private void PerspectiveChangeNotifier_OnValueChanged(bool data)
         {
             faceConstraintManager.ChangePerspective(data);
+            pointOfViewManager?.ChangeView(data);
         }
 
         public void AddVelocity(Vector3 velocity)
@@ -175,15 +229,24 @@ namespace Assets.KaomoLab.CSEmulator.Components
         private void OnCollisionEnter(Collision collision)
         {
             playerGroundingManager.AddCollision(collision);
+            playerMantlingManager.AddCollision(collision);
         }
 
         private void OnCollisionExit(Collision collision)
         {
             playerGroundingManager.RemoveCollision(collision);
+            playerMantlingManager.RemoveCollision(collision);
         }
 
         private void Update()
         {
+            //ItemHighligherでの登録がStartで行われているので
+            if (needPointOfViewCommandBufferRead)
+            {
+                ReadThirdPersonCameraCommandBuffer();
+                needPointOfViewCommandBufferRead = false;
+            }
+
             var p = gameObject.transform.position;
             var speedRate = (prevPosition - p).magnitude / Time.deltaTime / baseSpeed;
             //平均にしないとめっちゃ震えるので
@@ -191,6 +254,16 @@ namespace Assets.KaomoLab.CSEmulator.Components
             if(speedAverage.hasAverage)
                 animator.SetFloat(MOVE_SPEED_RATIO, speedAverage.average);
             prevPosition = p;
+
+            pointOfViewManager.UpdateThridPersonCameraPosition();
+        }
+        private void ReadThirdPersonCameraCommandBuffer()
+        {
+            foreach (var c in pointOfViewManager.firstPersonCamera.GetCommandBuffers(UnityEngine.Rendering.CameraEvent.BeforeImageEffects))
+            {
+                if (c.name != "Unnamed command buffer") continue;
+                pointOfViewManager.thirdPersonCamera.AddCommandBuffer(UnityEngine.Rendering.CameraEvent.BeforeImageEffects, c);
+            }
         }
 
         private void LateUpdate()
@@ -207,6 +280,7 @@ namespace Assets.KaomoLab.CSEmulator.Components
             //https://docs.unity3d.com/ja/2019.4/ScriptReference/CharacterController.SimpleMove.html
             //1フレームで複数回呼ぶのを推奨していないけどもしかたない
             characterController.Move(velocity * Time.deltaTime);
+            ApplyMantling(); //登り後の位置に上書きするのでMoveの後
 
             //歩きモーションの後にポーズを上書きするという挙動
             //つまり歩きモーションがポーズのリセット兼ねている
@@ -284,6 +358,26 @@ namespace Assets.KaomoLab.CSEmulator.Components
                     cckPlayerBaseMoveSpeed.value = speed;
                 }
             );
+        }
+        void ApplyMantling()
+        {
+            if (!mantlingSettings.UseMantling) return;
+
+            if (faceConstraintManager.isConstraintForward)
+            {
+                playerMantlingManager.SetAdditionalRotate(Quaternion.identity);
+            }
+            else
+            {
+                var r = Quaternion.Euler(0, walkManager.GetDirectionAngle(), 0);
+                playerMantlingManager.SetAdditionalRotate(r);
+            }
+
+            playerMantlingManager.CheckMantling((pos) =>
+            {
+                characterController.WarpTo(pos);
+            });
+
         }
         void ApplyAnimation()
         {

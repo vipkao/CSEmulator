@@ -60,7 +60,7 @@ namespace Assets.KaomoLab.CSEmulator.Editor.Window
             //}
             op.perspective = EditorGUILayout.Toggle("一人称視点", op.perspective);
             EditorGUILayout.HelpBox(
-                "現在はVRMモデルの挙動のみに影響します。視点は一人称のままです。", MessageType.Info
+                "三人称視点での各種挙動は参考程度でお願いします。\nプレビュー開始時は一人称視点となります。", MessageType.Info
             );
 
             EditorGUILayout.LabelField("PlayerHandle");
